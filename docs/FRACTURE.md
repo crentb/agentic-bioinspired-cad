@@ -25,8 +25,8 @@ the vertical line marks the end of the shortest run, which bounds the work-to-co
 window. (b) Ratios to the 0° value: the peak-load gain follows the initial stiffness of the rotated
 anisotropic material, the energy absorbed up to peak load does not increase, and J at crack
 initiation rises by 7 % at 45°. (c) Crack tortuosity through the ply architecture of the four
-Bouligand pitch coupons; the shaded band is the 10–30° per ply range of reported optima for printed
-Bouligand structures (LITERATURE.md §1.6). (d) Fused (uniform G_c) versus weak-interface ("non-fused") woven idealization: weak
+Bouligand pitch coupons as traced in July 2026 (see the reproducibility note in §5); the shaded band
+is the 10–30° per ply range of reported optima for printed Bouligand structures (LITERATURE.md §1.6). (d) Fused (uniform G_c) versus weak-interface ("non-fused") woven idealization: weak
 interfaces delaminate and fail early. Model units in (a) and (d).*
 
 ---
@@ -150,7 +150,9 @@ resistance curve) from a full-model run to separation, or an experiment.
 Animated: [crack at 45°](figures/crack_propagation_45deg.gif) and
 [crack at 0°](figures/crack_propagation_0deg.gif), each with the load–displacement point tracked.
 The animations come from a higher-viscosity variant of the deck (`tm6_video.i`) run to complete
-separation for filming.
+separation for filming; the half model is shown mirrored about its crack plane, with the notch
+(a free boundary in that model) drawn in, and the frames follow the run's progress so the crack's
+advance through the load drop is filmed.
 
 ### 3.2 J-integral at initiation (elastic, symmetry-corrected)
 
@@ -225,8 +227,10 @@ driven across six plies with the validated full-model solver.
 
 ![Crack paths through four Bouligand pitches](figures/bouligand_crack_paths.png)
 
-*Figure 3. Final damage field for pitch angles of 10, 15, 20, and 30° per ply (six plies, strip
-boundaries dotted). The crack changes direction at every ply as the weak plane rotates.*
+*Figure 3. Final damage field for pitch angles of 10, 15, 20, and 30° per ply (the last converged
+step of each run). Strip boundaries are dotted and each ply is labeled with its rod angle; the
+region left of the first boundary is the notch. The crack changes direction at every ply as the
+weak plane rotates. Titles give the tortuosity recorded in July 2026.*
 
 | Pitch (° per ply) | 10 | 15 | 20 | 30 |
 |---|---|---|---|---|
@@ -234,12 +238,21 @@ boundaries dotted). The crack changes direction at every ply as the weak plane r
 | Twist amplitude (fraction of height) | 0.369 | 0.453 | 0.410 | 0.477 |
 | Work of fracture (model units) | 0.01525 | 0.01403 | 0.01415 | 0.01126 |
 
-**The crack twists through every pitch, and its tortuosity peaks at 15° per ply — inside the
-10–30° per ply range of reported optima for printed Bouligand structures (LITERATURE.md §1.6).** This is a
-mechanism-level match between the simulated crack path on the coupons' own designs and the published pitch range. The
-evidence is first-order: two-dimensional, six plies, one realization per pitch, and a coarse mesh;
-the work of fracture is noisy and does not yet track tortuosity (it is highest at 10°). A clean
-pitch optimum needs finer meshes, more plies, and replicates.
+**The crack twists through every pitch: at every ply boundary the damage changes direction as the
+weak plane rotates.** In the July 2026 measurement the tortuosity peaked at 15° per ply, inside the
+10–30° per ply range of reported optima for printed Bouligand structures (LITERATURE.md §1.6), but
+the location of that peak depends on how a path is traced through damage that spreads and branches
+(below), so it is not a located optimum. The evidence is first-order: two-dimensional, six plies,
+one realization per pitch, and a coarse mesh; the work of fracture is noisy and does not track
+tortuosity (it is highest at 10°). Locating a pitch optimum needs finer meshes, more plies,
+replicates, and a crack-path measure that is robust to diffuse, branching damage.
+
+**Reproducibility (2026-09-26).** Re-running the generated decks reproduces the damage fields;
+Figure 3 shows the re-run. The tortuosity values in the table were traced in July 2026 with a method
+that was not archived. With a documented measure, the column-wise damage maximum where the damage
+reaches a threshold, and path length over horizontal span (`crack_path` and `path_tortuosity` in
+`docs/figures/src/field_render.py`), the re-run gives 1.36, 1.73, 2.13 and 2.61 at 10, 15, 20 and
+30° per ply for c ≥ 0.5, rising with pitch, and 1.13, 1.05, 1.94 and 1.51 for c ≥ 0.9.
 
 ## 6. Three-dimensional cracks
 
@@ -332,7 +345,8 @@ preferred direction.
 
 Across these studies, the robust effect of oriented architecture is on the **crack path**:
 off-axis material deflects the crack (§4), and rotating plies make it twist through the thickness
-(§6) and lengthen, with the tortuosity peaking inside the literature band (§5). Frictional sliding
+(§6) and change direction at every ply (§5; where the tortuosity peaks depends on how the diffuse
+crack path is traced). Frictional sliding
 per se gives no stiffness redundancy (§7.2), and weak interfaces per se delaminate (§7.3). The
 simulations have not yet delivered the energy consequence of the longer, twisted path: the load and
 work ratios of the orientation sweep are dominated by elastic anisotropy (§3.1). Measuring the
@@ -375,7 +389,7 @@ linear stiffness screen is blind to all of these path effects; TM-6 resolves the
 
 - The orientation, deflection, Bouligand, and woven studies are two-dimensional (except §6),
   single-realization, first-order results in model units; the transferable findings are the
-  relative ones (the deflection symmetry, the tortuosity peak, the retention identity, the
+  relative ones (the deflection symmetry, the ply-by-ply twisting, the retention identity, the
   delamination penalty) together with the caution that load and work ratios of anisotropic
   specimens must be separated from their stiffness difference.
 - The Bouligand study uses an orientation idealization of the ply design, not the voxel-resolved

@@ -271,4 +271,4 @@ Margins are computed from the unrounded records.
    crack-twisting work of fracture — the mechanism behind the pitch dependence of printed-Bouligand
    toughness (LITERATURE.md §1.6) and behind enamel decussation. The fracture instrument (FRACTURE.md)
    resolves the crack-path effects that TM-3 misses: deflection steered by rod orientation and a
-   pitch-dependent crack tortuosity that peaks inside the literature band.
+   crack that changes direction at every ply of a Bouligand coupon.

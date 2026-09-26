@@ -6,7 +6,9 @@
 > ratio tracks the 1.81× higher initial stiffness at 45°; energy absorbed to peak is 0.98×. It is
 > not evidence of crack-twisting toughening. (2) Weak interfaces: the 0.55× work-to-common-displacement
 > ratio understates the penalty; at equal initial stiffness the non-fused specimen reaches 0.32× the
-> peak load, 0.16× the energy to peak and 0.10× the total work. See docs/FRACTURE.md.
+> peak load, 0.16× the energy to peak and 0.10× the total work. (3, added 2026-09-26) The Bouligand
+> tortuosity peak at 15°/ply depends on how the diffuse crack path is traced; a documented
+> re-measurement rises with pitch instead. See docs/FRACTURE.md §5.
 
 **Question:** does a *non-fused* woven cell — separate fibers coupled only by frictional
 crossings — shed the load of a severed fiber to its neighbours (graceful redundancy), unlike the *fused*

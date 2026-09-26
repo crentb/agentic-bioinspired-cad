@@ -1085,7 +1085,8 @@ def fig_bouligand_paths(rec: Finder, sim: Finder, out: Path) -> None:
     """
     Final damage field through the four Bouligand pitches (FRACTURE.md, Figure 3), rendered
     from the generated six-strip decks boul_d{pitch}.e. Ply-strip boundaries are dotted and
-    each strip is labeled with its rod angle k·Δθ; titles carry the tortuosity from the record.
+    each ply is labeled with its rod angle (the notch region is 0°); titles carry the tortuosity
+    from the record.
     """
     boul = json.load(open(rec.one("tm6_bouligand_result.json")))
     fig = plt.figure(figsize=(13.6, 3.0), facecolor="white")
@@ -1104,10 +1105,11 @@ def fig_bouligand_paths(rec: Finder, sim: Finder, out: Path) -> None:
             if j:  # dotted boundary between strip j-1 and strip j
                 edge = 0.5 * (spans[j - 1][1] + lo)
                 ax.plot([edge, edge], [y0, y1], color=fr.OUTLINE, lw=0.7, ls=(0, (1, 2)))
+            # Block 0 is the notch region (0 deg material); block k >= 1 is ply k at (k - 1) * pitch.
             ax.text(
                 0.5 * (lo + hi),
                 y1 + 0.03 * (y1 - y0),
-                f"{j * p}°",
+                "notch" if j == 0 else f"{(j - 1) * p}°",
                 ha="center",
                 va="bottom",
                 fontsize=7.5,
@@ -1165,28 +1167,49 @@ def _frame_steps(n: int, count: int) -> list[int]:
     return sorted(set(np.linspace(0, n - 1, min(n, count)).round().astype(int).tolist()))
 
 
+def _progress_steps(columns: list[np.ndarray], count: int) -> list[int]:
+    """
+    `count` step indices spaced evenly along the run's progress: the cumulative arc length of the
+    normalized columns (e.g. displacement, force, mean damage). A crack that crosses the specimen
+    within a few percent of the loading still gets most of the frames.
+    """
+    norm = [(c - c.min()) / (np.ptp(c) or 1.0) for c in columns]
+    arc = np.concatenate([[0.0], np.cumsum(np.sqrt(sum(np.diff(c) ** 2 for c in norm)))])
+    targets = np.linspace(0.0, arc[-1], count)
+    return sorted(set(int(np.searchsorted(arc, t)) for t in targets) | {len(arc) - 1})
+
+
 def gif_crack_propagation(sim: Finder, angle: int, path: Path) -> None:
     """
-    Crack growth in the notched specimen at one rod angle (tm6_video.i run vid_a{angle}):
-    left, the damage field of the half model mirrored about its crack plane; right, the
-    load-displacement curve with the current state marked.
+    Crack growth in the notched specimen at one rod angle (tm6_video.i run vid_a{angle}): left,
+    the damage field of the half model mirrored about its crack plane, with the notch (a free
+    boundary in this model, x < 0.5) drawn in; right, the load-displacement curve with the
+    current state marked. Frames follow the run's progress, so the crack's advance is filmed.
     """
-    exo = sim.one(f"vid_a{angle}.e")
-    c = read_csv_columns(sim.one(f"vid_a{angle}.csv"))
-    disp, force = monotone(c["top_disp"], np.abs(c["reaction_y"]))
-    times = c["time"][np.concatenate([[True], np.diff(c["top_disp"]) > 1e-12])]
     import pyvista as pv
 
+    exo = sim.one(f"vid_a{angle}.e")
+    c = read_csv_columns(sim.one(f"vid_a{angle}.csv"))
+    disp, force = np.asarray(c["top_disp"]), np.abs(np.asarray(c["reaction_y"]))
+    times = np.asarray(c["time"])
     reader = pv.get_reader(str(exo))
+    steps = _progress_steps([disp, force, np.asarray(c["crack_c"])], 72)
     frames = []
-    for i in _frame_steps(reader.number_time_points, 72):
-        t_i = reader.time_values[i]
-        k = int(np.argmin(np.abs(times - t_i)))  # CSV row of this time step
-        fig = plt.figure(figsize=(9.6, 3.6), facecolor="white")
-        ax_f = fig.add_axes([0.02, 0.1, 0.4, 0.74])
+    for k in steps:
+        i = int(np.argmin(np.abs(np.asarray(reader.time_values) - times[k])))  # Exodus step
+        fig = plt.figure(figsize=(10.0, 4.2), facecolor="white")
+        ax_f = fig.add_axes([0.03, 0.12, 0.38, 0.72])
         damage_panel(ax_f, fr.read_exodus(exo, i), mirror=True)
-        ax_f.set_title("Damage field (half model mirrored)", loc="center", pad=4, fontsize=9.5)
-        ax_c = fig.add_axes([0.53, 0.2, 0.44, 0.62])
+        ax_f.plot([0.0, 0.5], [0.0, 0.0], color=INK, lw=2.4, solid_capstyle="butt")  # the notch
+        ax_f.text(0.25, 0.035, "notch", ha="center", va="bottom", fontsize=8.5, color=INK_2)
+        cax = fig.add_axes([0.425, 0.2, 0.012, 0.56])
+        cb = fig.colorbar(
+            plt.cm.ScalarMappable(matplotlib.colors.Normalize(0.0, 1.0), fr.BONE_RED), cax=cax
+        )
+        cb.outline.set_visible(False)
+        cb.ax.tick_params(labelsize=8, colors=INK_2, length=0)
+        cb.set_label("damage c", fontsize=8.5, color=INK_2)
+        ax_c = fig.add_axes([0.56, 0.2, 0.41, 0.62])
         style_axes(ax_c)
         ax_c.plot(disp * 1e3, force, color=BLUE, lw=LINE_W)
         ax_c.plot(
@@ -1201,9 +1224,10 @@ def gif_crack_propagation(sim: Finder, angle: int, path: Path) -> None:
         ax_c.set_xlabel("Applied displacement (×10⁻³, model units)")
         ax_c.set_ylabel("Reaction force (model units)")
         fig.suptitle(
-            f"Crack growth with rods at {angle}° to the crack plane", x=0.02, ha="left", fontsize=11
+            f"Crack growth with rods at {angle}° to the crack plane", x=0.03, ha="left", fontsize=11
         )
         frames.append(_frame(fig))
+    frames += [frames[-1]] * int(1.5 * ANIM_FPS)  # hold the final state for 1.5 s
     fr.save_gif(frames, path, fps=ANIM_FPS)
     print(f"  wrote {path.name}  ({len(frames)} frames, {path.stat().st_size / 1024:.0f} KB)")
 
@@ -1212,14 +1236,15 @@ def gif_crack_deflection(sim: Finder, angle: int, path: Path) -> None:
     """Growth of the full-model crack in a rod field at `angle` (tm6_stageD.i run D_a{angle})."""
     exo = sim.one(f"D_a{angle}.e")
     frames = []
-    for i in _frame_steps(fr.exodus_steps(exo), 60):
+    for i in range(fr.exodus_steps(exo)):  # the adaptive run stores few steps: use them all
         fig = plt.figure(figsize=(4.6, 5.0), facecolor="white")
         ax = fig.add_axes([0.04, 0.2, 0.92, 0.7])
         damage_panel(ax, fr.read_exodus(exo, i))
         ax.set_title(f"Crack deflection, rods at {angle}°", loc="center", pad=8)
         damage_colorbar(fig, [0.12, 0.1, 0.76, 0.035])
         frames.append(_frame(fig))
-    fr.save_gif(frames, path, fps=ANIM_FPS)
+    fps = 5.0  # slower than the long animations: each frame is a whole adaptive step
+    fr.save_gif(frames + [frames[-1]] * int(2 * fps), path, fps=fps)  # hold the result for 2 s
     print(f"  wrote {path.name}  ({len(frames)} frames, {path.stat().st_size / 1024:.0f} KB)")
 
 

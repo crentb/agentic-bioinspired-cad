@@ -59,7 +59,7 @@ ranks.
 | `tm6_result.json` | `abcad/fracture/tm6_analyze.py` over `orientation_sweep/` | peak load and area under the load–displacement curve to a common displacement (2.357e-3, the shortest run) vs angle; max/min ratio 1.6655 at 45°. That window closes before the 0°/90° peaks (3.05e-3) and every run stops 4–6 % past its peak with no crack propagation, so the ratio tracks initial stiffness (1.81× at 45°), not toughness: energy absorbed to peak is 0.98× at 45°. See docs/FRACTURE.md |
 | `jintegral_sweep/tm6j_a{0..90}.csv` | `decks/tm6_jintegral.i` swept over `euler_angle_1` | J (3 rings) vs displacement per angle |
 | `tm6_jintegral_result.json` | J-integral sweep summary | J at initiation vs angle; peak at 45°, Jc ratio 1.173; benchmark error 4.5 % |
-| `tm6_bouligand_result.json` | `tm6_make_bouligand_deck.py` runs at 10/15/20/30°/ply | crack tortuosity (peak 1.824 at 15°/ply), twist amplitude, work |
+| `tm6_bouligand_result.json` | `tm6_make_bouligand_deck.py` runs at 10/15/20/30°/ply | crack tortuosity as traced in July 2026 (see FRACTURE.md §5), twist amplitude, work |
 | `tm6_stageD_result.json` | `decks/tm6_stageD.i` swept over angle | full-model crack deflection drift by rod angle (0/90 straight, 30/60 opposite) |
 
 `tm6_result.json` is reproducible from the archived sweep: `python -m abcad.fracture.tm6_analyze
