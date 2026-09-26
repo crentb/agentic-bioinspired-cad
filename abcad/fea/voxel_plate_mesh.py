@@ -169,7 +169,9 @@ def add_plates(
     # bond depth [voxels]; clamped below t so a plate is never entirely inside the members
     o = min(max(int(round(overlap_mm / voxel_mm)), 0), t - 1)
 
-    z_any = rod_occ.any(axis=(0, 1))
+    # np.asarray: numpy < 2.3 types a reduced .any() as scalar-or-array; the result here is always
+    # a 1-D array over z, and the explicit array keeps len() and slicing well-typed.
+    z_any = np.asarray(rod_occ.any(axis=(0, 1)))
     if not z_any.any():
         raise RuntimeError("occupancy grid is empty — nothing to plate")
     z_min = int(np.argmax(z_any))  # first occupied z-slice
