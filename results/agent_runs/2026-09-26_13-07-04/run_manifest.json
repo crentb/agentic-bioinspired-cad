@@ -1,0 +1,202 @@
+{
+  "prompt": "a woven cubic lattice metamaterial",
+  "timestamp": "2026-09-26T13:12:43",
+  "use_code": "tests/agent/fixtures/woven_failing_emit.py",
+  "approved": true,
+  "ever_approved": true,
+  "blender_status": "success",
+  "final_result": "out/e2e_2026-09-26_rerun/agent_runs/2026-09-26_13-07-04/geom_fix_run_2.stl",
+  "stl_path": "out/e2e_2026-09-26_rerun/agent_runs/2026-09-26_13-07-04/geom_fix_run_2.stl",
+  "stl_path_scaled": "out/e2e_2026-09-26_rerun/agent_runs/2026-09-26_13-07-04/geom_fix_run_2_autoscaled_x1.6.stl",
+  "mesh_stats": {
+    "bbox_mm": [
+      90.6,
+      90.6,
+      90.597
+    ],
+    "overhang_area_frac": 0.1392
+  },
+  "manufacturability": {
+    "printable": false,
+    "process": "fdm",
+    "violations": [
+      {
+        "type": "deep_audit",
+        "detail": "13% of material thinner than 0.8 mm"
+      }
+    ],
+    "suggestions": [
+      "note: non-manifold edges present (bevel miter folds) \u2014 slicers union these; verify the slice preview at fiber crossings",
+      "scale up x1.6 (features certified at 0.5 mm vs the 0.8 mm limit) or thicken fibers"
+    ],
+    "notes": [
+      "min_feature_mm not provided (skipped)"
+    ],
+    "deep_audit": {
+      "stl": "out/e2e_2026-09-26_rerun/agent_runs/2026-09-26_13-07-04/geom_fix_run_2.stl",
+      "bbox_mm": [
+        90.6,
+        90.6,
+        90.6
+      ],
+      "volume_ml": 14.37,
+      "watertight": true,
+      "manifold": false,
+      "overhang_area_frac": 0.1341,
+      "voxel_mm": 0.283,
+      "max_formable_d_mm": 0.5,
+      "lost_frac_at_d": {
+        "0.3": 0.0,
+        "0.5": 0.0,
+        "0.8": 0.1345,
+        "1.2": 1.0
+      },
+      "enclosed_void_count": 0,
+      "verdict": "SCALE/REDESIGN",
+      "issues": [
+        "13% of material thinner than 0.8 mm"
+      ],
+      "recommendations": [
+        "note: non-manifold edges present (bevel miter folds) \u2014 slicers union these; verify the slice preview at fiber crossings",
+        "scale up x1.6 (features certified at 0.5 mm vs the 0.8 mm limit) or thicken fibers"
+      ],
+      "autoscaled_variant": {
+        "stl": "out/e2e_2026-09-26_rerun/agent_runs/2026-09-26_13-07-04/geom_fix_run_2_autoscaled_x1.6.stl",
+        "scale": 1.6,
+        "verdict": "PRINT",
+        "issues": [],
+        "max_formable_d_mm": 0.8
+      }
+    }
+  },
+  "vlm_analysis": {
+    "match_quality": "good",
+    "physical_stability": "stable",
+    "comment": "Realizes woven cubic lattice with interwoven wire structure and coherent connections.",
+    "approve": true
+  },
+  "iteration_count": 0,
+  "fix_attempts_used": 3,
+  "stalled": false,
+  "schema_version": "abcad.agent.run-manifest/1",
+  "terminal_reason": "certified",
+  "terminal_detail": null,
+  "critique_failed": false,
+  "certification": {
+    "status": "autoscaled_print",
+    "artifact": "out/e2e_2026-09-26_rerun/agent_runs/2026-09-26_13-07-04/geom_fix_run_2_autoscaled_x1.6.stl",
+    "gated_source_stl": "out/e2e_2026-09-26_rerun/agent_runs/2026-09-26_13-07-04/geom_fix_run_2.stl",
+    "matches_final": true
+  },
+  "size_normalization": null,
+  "gate_preflight": {
+    "deep_audit_requested": true,
+    "deep_audit_available": true,
+    "problems": []
+  },
+  "entry": {
+    "origin": "use-code",
+    "chars": 2059
+  },
+  "counters": {
+    "critique_runs": 1,
+    "gate_runs": 1,
+    "repair_executions": 2,
+    "steps_taken": 4
+  },
+  "trace": [
+    {
+      "step": "ingest",
+      "next": "repair",
+      "reason": null
+    },
+    {
+      "step": "repair",
+      "next": "critique",
+      "reason": null
+    },
+    {
+      "step": "critique",
+      "next": "gate",
+      "reason": null
+    },
+    {
+      "step": "gate",
+      "next": "__end__",
+      "reason": "certified"
+    }
+  ],
+  "config": {
+    "package_version": "0.1.0",
+    "out_dir": "out/e2e_2026-09-26_rerun",
+    "debug_dir": null,
+    "keep_temp": false,
+    "run_log": true,
+    "log_level": "INFO",
+    "blender_path": "/opt/homebrew/bin/blender",
+    "blender_timeout_s": 300.0,
+    "render_resolution": [
+      1280,
+      720
+    ],
+    "render_samples": 64,
+    "base_model": "meta-llama/Llama-3.2-3B-Instruct",
+    "base_revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95",
+    "lora_adapter": "rachelkluu/Bioinspired3D",
+    "lora_revision": "47539274e56c7b38d052bfe6334a2868029a26b8",
+    "emit_device": "auto",
+    "emit_dtype": "float16",
+    "emit_mode": "design",
+    "emit_max_new_tokens": 2048,
+    "emit_temperature": 0.1,
+    "emit_top_p": 0.9,
+    "emit_seed": null,
+    "emit_timeout_s": 1800.0,
+    "rag_enabled": true,
+    "embed_model": "BAAI/bge-small-en-v1.5",
+    "embed_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "embed_device": "cpu",
+    "text_corpora": [
+      "abcad/data/rag/text_corpus.jsonl"
+    ],
+    "vlm_corpora": [
+      "abcad/data/rag/vlm_corpus.jsonl"
+    ],
+    "reference_image_root": null,
+    "text_top_k": 2,
+    "reference_top_k": 2,
+    "llm_base_url": "http://127.0.0.1:11435/v1",
+    "text_model": "qwen2.5-coder:7b",
+    "vlm_model": "qwen3-vl:8b",
+    "llm_timeout_s": 600.0,
+    "llm_max_retries": 2,
+    "allow_remote_llm": false,
+    "expected_context_length": 8192,
+    "vlm_temperature": 0.1,
+    "vlm_max_tokens": 3000,
+    "vlm_image_max_px": 640,
+    "critique_attempts": 2,
+    "verdict_schema": true,
+    "repair_attempts": 3,
+    "repair_temperature_ladder": [
+      0.1,
+      0.5,
+      0.8
+    ],
+    "refine_temperature": 0.1,
+    "text_max_tokens": 5000,
+    "max_iter": 3,
+    "print_process": "fdm",
+    "deep_audit": true,
+    "target_size_mm": null,
+    "build_volume_mm": [
+      220.0,
+      220.0,
+      250.0
+    ],
+    "require_deep_audit": true,
+    "step_limit": 25,
+    "default_prompt": "a double-twist helical Bouligand structure",
+    "blender_version": "5.1.2"
+  }
+}

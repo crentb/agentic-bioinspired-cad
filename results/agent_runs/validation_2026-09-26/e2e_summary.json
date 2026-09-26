@@ -265,6 +265,48 @@
     "pass": true
   },
   "E2E-4": {
+    "repeat_of": "E2E-4_first_attempt",
+    "warmup": {
+      "run": "2026-09-26_13-07-04",
+      "terminal_reason": "certified",
+      "wall_s": 343
+    },
+    "runs": [
+      {
+        "label": "E2E-4r_full_woven",
+        "run": "2026-09-26_13-13-06",
+        "exit_code": 0,
+        "wall_s": 306,
+        "peak_swap_delta_mb": 0,
+        "killed": "none",
+        "released_models": "[\"qwen3-vl:8b\"]",
+        "phase1_before_phase2": true,
+        "entry_origin": "lora",
+        "terminal_reason": "certified",
+        "fix_attempts_used": 0,
+        "iteration_count": 0,
+        "certification": "autoscaled_print"
+      },
+      {
+        "label": "E2E-4r_full_default",
+        "run": "2026-09-26_13-18-33",
+        "exit_code": 0,
+        "wall_s": 208,
+        "peak_swap_delta_mb": 615,
+        "killed": "none",
+        "released_models": "[\"qwen3-vl:8b\"]",
+        "phase1_before_phase2": true,
+        "entry_origin": "lora",
+        "terminal_reason": "approved_gated",
+        "fix_attempts_used": 0,
+        "iteration_count": 1,
+        "certification": "not_certified"
+      }
+    ],
+    "orphaned_emitters_after": 0,
+    "pass": true
+  },
+  "E2E-4_first_attempt": {
     "runs": [
       {
         "label": "E2E-4_full_woven",

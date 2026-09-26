@@ -91,25 +91,33 @@ def test_normalize_to_target_size(artifacts_dir):
 def test_live_validation_certified_runs(results_dir):
     """TM-4 gold: the live validation of 2026-09-26 (results/agent_runs/validation_2026-09-26).
 
-    The recorded acceptance checks pass, no chat request was truncated, and every run that reached
-    Phase 2 ended certified through a single gate pass, with a manifest that records the full
-    chain: critic approval, the deep audit, and a PRINT-certified auto-scaled variant.
+    Every acceptance check passes (E2E-4 on its repeat, which is recorded beside the first
+    attempt), no chat request was truncated, every Phase-2-only run on the recorded failing emit
+    ended certified through a single gate pass with the full chain in its manifest, and both full
+    two-phase runs released the resident critic before Phase 1 and ended with a truthful manifest.
     """
     root = results_dir / "agent_runs"
     summary = json.load(open(root / "validation_2026-09-26/e2e_summary.json"))
-    for check in ("E2E-1", "E2E-2", "E2E-3", "E2E-5", "E2E-6", "E2E-7"):
+    for check in ("E2E-1", "E2E-2", "E2E-3", "E2E-4", "E2E-5", "E2E-6", "E2E-7"):
         assert summary[check]["pass"], check
+    assert summary["E2E-4_first_attempt"]["pass"] is False  # kept on record, not overwritten
     assert summary["daemon"]["truncated_nonzero"] == 0
-    manifests = sorted(glob.glob(str(root / "2026-09-26_*/run_manifest.json")))
-    assert len(manifests) == 5
-    for path in manifests:
-        m = json.load(open(path))
-        assert m["terminal_reason"] == "certified", path
+    manifests = [json.load(open(p)) for p in sorted(root.glob("2026-09-26_*/run_manifest.json"))]
+    assert len(manifests) == 8
+    for m in manifests:
+        if m["entry"]["origin"] != "use-code":
+            continue
+        assert m["terminal_reason"] == "certified"
         assert m["approved"] is True and m["ever_approved"] is True
         assert m["counters"]["gate_runs"] == 1
         assert m["fix_attempts_used"] <= 3
         assert m["manufacturability"]["deep_audit"]["autoscaled_variant"]["verdict"] == "PRINT"
         assert m["certification"]["status"] == "autoscaled_print"
+    full = [m for m in manifests if m["entry"]["origin"] == "lora"]
+    assert [m["terminal_reason"] for m in full] == ["certified", "approved_gated"]
+    for run in summary["E2E-4"]["runs"]:
+        assert run["released_models"] and run["phase1_before_phase2"]
+    assert summary["E2E-4"]["orphaned_emitters_after"] == 0
 
 
 def test_tm6_orientation_sweep_reproducible(results_dir):

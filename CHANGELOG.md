@@ -26,7 +26,8 @@ Initial public release.
   locally within 16 GB of unified memory: before Phase 1 it unloads any chat model the local
   daemon still holds, and a terminated or interrupted parent takes the Phase-1 child down with it.
   Validated live on the target machine (TM-4): five runs from a failing emit, including an
-  offline run and a 58 mm target-size run, each ended with a certified print file.
+  offline run and a 58 mm target-size run, each ended with a certified print file, and a full
+  run from the text prompt alone certified a woven lattice.
 - **Printing tools** (`abcad.printing`): the TM-2 printability audit (wall-thickness ladder,
   clearance, enclosed voids, overhang; FDM and resin verdicts), certified FDM variants, and a
   watertight remesher for open-tube lattices.

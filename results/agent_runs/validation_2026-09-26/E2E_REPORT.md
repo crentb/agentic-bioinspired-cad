@@ -26,7 +26,7 @@ the manifest of every run that reached Phase 2 sits beside this folder in
 | E2E-1 Phase-1 emit | **Pass.** 1,857 characters that parse as Python and start with `import bpy`; no Ollama model resident during the emit; 123 s; swap +418 MB |
 | E2E-2 Smoke | **Pass.** The printed excerpt is the model's completion (Blender code), not the prompt; 121 s |
 | E2E-3 Regression convergence, 3 runs | **Pass.** All three runs certified (below) |
-| E2E-4 Full two-phase runs | **Fail on the first attempt**, from memory co-residency and orphaned emitter processes; both causes fixed, re-run pending (below) |
+| E2E-4 Full two-phase runs | **Pass on the repeat** (below). The first attempt failed from memory co-residency and orphaned emitter processes; both causes were fixed and the repeat recreated the failing situation on purpose |
 | E2E-5 Target size 58 mm | **Pass.** The approved part was normalized from 90.6 to 58.0 mm (×0.640); the sized STL was audited (all material thinner than 0.8 mm at that size) and auto-scaled ×2.7 to PRINT; 317 s |
 | E2E-6 Retrieval grounding | **Pass.** Each query ranks its own reference first: woven render 0.934, Bouligand render 0.842, woven code exemplar 0.808 |
 | E2E-7 Offline sovereignty | **Pass.** With `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` the run certified as the online runs did; all 108 sampled sockets of its process tree were loopback |
@@ -78,4 +78,22 @@ Fixes, with unit tests (`tests/agent/test_agent_chat.py`, `tests/agent/test_agen
 - The validation watchdog now stops the whole process tree, including children in their own
   session.
 
-The full-run check is repeated with these fixes; its result will be added here.
+### Repeat with the fixes (13:07–13:22)
+
+The repeat recreated the failing situation on purpose: a Phase-2-only warm-up run
+(`2026-09-26_13-07-04`, certified) left the critic resident in the daemon ("about a minute" of
+keep-alive left), and the first full run started 20 s later.
+
+| Run | Before Phase 1 | Phase 1 | Outcome | Time | Swap growth |
+|---|---|---|---|---|---|
+| `2026-09-26_13-13-06`, woven prompt | released `qwen3-vl:8b` | 1,857 characters in 137 s | the emitted script ran without repair; approved (good, stable); 13 % thinner than 0.8 mm, ×1.6 → PRINT; **certified** | 306 s | +0 MB |
+| `2026-09-26_13-18-33`, default Bouligand prompt | released `qwen3-vl:8b` | 1,077 characters in 74 s | approved (good, stable), gated, refined once, approved again; **approved_gated** (below) | 208 s | +615 MB |
+
+Both runs released the resident critic before loading the emitter, finished Phase 1 before any
+Phase-2 step, record `entry.origin = "lora"`, and ended through a router decision with a truthful
+manifest; no emitter process survived. The Bouligand emit came out 2.83 × 2.83 × 2.0 mm, because
+the emitter works in Blender units: 4.7 % of the material is thinner than the smallest audited
+feature (0.3 mm) and the overhang area is 34 %, so the gate had no formable size to scale from
+and correctly declined to certify it. A target size (`ABCAD_TARGET_SIZE_MM`, exercised by E2E-5)
+normalizes such a part before the audit. The warm-up grew swap by 4,018 MB, within the 5,120 MB
+threshold, while the host was also rendering documentation figures.
