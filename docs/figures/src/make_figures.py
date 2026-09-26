@@ -36,8 +36,8 @@ Inputs (repo-relative defaults; override on the command line)
         D_a{0,30,60,90}.e            tm6_stageD.i at each rod angle (euler_angle_1)
         boul_d{10,15,20,30}.e        tm6_make_bouligand_deck <pitch> 6, then solved
         vid_a{45,0}.e, vid_a{45,0}.csv   tm6_video.i at 45 and 0 deg
-        D3d.e                        tm6_stageD_3d.i
-        twist3d.e                    tm6_3d_twist_example.i
+        D3d_long.e                   tm6_stageD_3d.i with Executioner/end_time=0.02
+        twist3d_long.e               tm6_3d_twist_example.i with Executioner/end_time=0.006
     RENDER INPUTS (--renders)
         woven_{cubic,bcc,diamond,octahedron}.png, bouligand_d30_w.png,
         enamel_linear_x4.png, enamel_linear_x4_smooth.png,
@@ -1125,11 +1125,13 @@ def fig_bouligand_paths(rec: Finder, sim: Finder, out: Path) -> None:
 def fig_twist_slices(sim: Finder, out: Path) -> None:
     """
     Crack path y(x) of the 3D rotating-plywood block (FRACTURE.md, Figure 4), sliced at the
-    mid-depth of each of its six ply slabs (ply angle k·30°), rendered from twist3d.e. The
+    mid-depth of each of its six ply slabs (ply angle k·30°), rendered from twist3d_long.e (the
+    example deck run to end time 0.006, `Executioner/end_time=0.006`; at the shipped 0.004 the
+    crack has barely advanced and has not yet snapped through the stack). The
     path in each slice is the column-wise damage maximum where the crack is fully developed
     (field_render.crack_path); depths are colored from light to dark through the stack.
     """
-    grid = fr.read_exodus(sim.one("twist3d.e"))
+    grid = fr.read_exodus(sim.one("twist3d_long.e"))
     z0, z1 = grid.bounds[4:6]
     n_slabs = 6
     fig, ax = plt.subplots(figsize=(7.2, 4.4))
@@ -1248,43 +1250,50 @@ def gif_crack_deflection(sim: Finder, angle: int, path: Path) -> None:
     print(f"  wrote {path.name}  ({len(frames)} frames, {path.stat().st_size / 1024:.0f} KB)")
 
 
-def gif_crack_3d(sim: Finder, path: Path) -> None:
+def gif_crack_3d(sim: Finder, path: Path, run: str = "D3d_long.e") -> None:
     """
-    A 3D phase-field crack forming through the thickness (tm6_stageD_3d.i run D3d): the crack
-    surface (damage isosurface c = 0.5) in oxblood inside a translucent bone block, with the
-    camera orbiting slowly while the crack grows.
+    A 3D phase-field crack forming through the thickness (tm6_stageD_3d.i run to end time 0.02,
+    `Executioner/end_time=0.02`, as D3d_long; the shipped 0.006 stops before propagation): the crack
+    surface (damage isosurface c = 0.5) in oxblood inside a translucent bone block. The run stores
+    few adaptive steps, so each step is shown for several frames while the camera orbits
+    continuously (50 deg over the clip), and the final state is held before the loop restarts.
     """
-
-    exo = sim.one("D3d.e")
+    exo = sim.one(run)
+    n_steps = fr.exodus_steps(exo)
+    per_step = max(1, round(48 / n_steps))  # frames per stored step
+    total = n_steps * per_step
     frames = []
-    steps = _frame_steps(fr.exodus_steps(exo), 48)
-    for n, i in enumerate(steps):
+    for i in range(n_steps):
         grid = fr.read_exodus(exo, i)
         surface = grid.contour([0.5], scalars="c")
+        cx, cy, cz = grid.center
 
         def actors(pl, surface=surface, grid=grid):
             pl.add_mesh(grid.outline(), color=fr.OUTLINE, line_width=1.5)
             if surface.n_points:
                 pl.add_mesh(surface, color=fr.BONE_RED(0.92), smooth_shading=True, specular=0.3)
 
-        cx, cy, cz = grid.center
-        azim = np.deg2rad(-60 + 50 * n / max(len(steps) - 1, 1))  # 50 deg orbit over the clip
-        camera = [
-            (cx + 2.6 * np.cos(azim), cy + 2.6 * np.sin(azim), cz + 1.6),
-            (cx, cy, cz),
-            (0, 0, 1),
-        ]
-        img = fr.render_mesh(
-            grid.extract_surface(),
-            color=fr.BONE,
-            camera=camera,
-            zoom=1.0,
-            size=(900, 760),
-            extra=actors,
-            opacity=0.18,
-            crop=False,
-        )
-        frames.append(img)
+        for j in range(per_step):
+            # from -115 to -65 deg: the camera stays on the -y side, facing the x-z crack plane
+            azim = np.deg2rad(-115 + 50 * (i * per_step + j) / max(total - 1, 1))
+            camera = [
+                (cx + 2.6 * np.cos(azim), cy + 2.6 * np.sin(azim), cz + 1.6),
+                (cx, cy, cz),
+                (0, 0, 1),
+            ]
+            frames.append(
+                fr.render_mesh(
+                    grid.extract_surface(),
+                    color=fr.BONE,
+                    camera=camera,
+                    zoom=1.0,
+                    size=(900, 760),
+                    extra=actors,
+                    opacity=0.18,
+                    crop=False,
+                )
+            )
+    frames += [frames[-1]] * int(1.5 * ANIM_FPS)  # hold the final state for 1.5 s
     fr.save_gif(frames, path, fps=ANIM_FPS)
     print(f"  wrote {path.name}  ({len(frames)} frames, {path.stat().st_size / 1024:.0f} KB)")
 
@@ -1294,7 +1303,10 @@ def make_gifs(sim: Finder, out: Path) -> None:
     gif_crack_propagation(sim, 45, out / "crack_propagation_45deg.gif")
     gif_crack_propagation(sim, 0, out / "crack_propagation_0deg.gif")
     gif_crack_deflection(sim, 60, out / "crack_deflection_60deg.gif")
-    gif_crack_3d(sim, out / "crack_3d_formation.gif")
+    try:  # needs the long 3D run to have completed (FRACTURE.md §6); keep the file otherwise
+        gif_crack_3d(sim, out / "crack_3d_formation.gif")
+    except FileNotFoundError as exc:
+        print(f"  kept crack_3d_formation.gif: {exc}")
 
 
 def fig_woven_cell(rec: Finder, sim: Finder, out: Path) -> None:

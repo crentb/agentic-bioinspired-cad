@@ -257,24 +257,37 @@ reaches a threshold, and path length over horizontal span (`crack_path` and `pat
 ## 6. Three-dimensional cracks
 
 - **Capability.** `tm6_stageD_3d.i` (1 × 1 × 0.5 block, 30 × 30 × 15 hexahedra, about 50,000
-  degrees of freedom) propagates a phase-field crack through the full thickness and deflects it;
-  2,285 nodes end fully cracked, with a peak memory of 1.47 GB. Animated:
-  [3D crack formation](figures/crack_3d_formation.gif).
+  degrees of freedom) runs the phase-field crack model in three dimensions within about 1.5 GB. In
+  a July 2026 run with a longer loading than the deck's default end time, the crack propagated
+  through the full thickness and deflected, and 2,285 nodes ended fully cracked. Animated (that
+  run): [3D crack formation](figures/crack_3d_formation.gif).
 - **Twisted fracture surface.** `tm6_make_3d_twist_deck.py` builds a rotating-plywood block whose
   thickness is divided into six ply slabs rotated 0 → 150° (30° per ply; 36 × 26 × 18 hexahedra).
   The twisting plies resisted the crack strongly — it barely advanced under six times the load of
-  the 2D model — and then snapped through, leaving a fracture surface that **twists through the
-  thickness**: the crack front sits near y ≈ 0.01 at the 0° face and y ≈ 0.99 at the 150° face.
+  the 2D model — and then, in a July 2026 run loaded past the example deck's default end time,
+  snapped through, leaving a fracture surface that **twists through the thickness**: the crack
+  front sits near y ≈ 0.01 at the 0° face and y ≈ 0.99 at the 150° face.
 
 ![Crack path at six depths through the rotating stack](figures/crack_twist_through_thickness.png)
 
-*Figure 4. Crack path y(x) of the 3D rotating-plywood block, sliced at six depths z (the ply angle
-at each depth is given in the legend). Near the 0° face the path deflects downward, near the 150°
-face upward: the fracture surface is a twisted sheet.*
+*Figure 4. Crack path y(x) of the 3D rotating-plywood block (July 2026 run), sliced at six depths z
+(the ply angle at each depth is given in the legend). Near the 0° face the path deflects downward,
+near the 150° face upward: the fracture surface is a twisted sheet.*
 
 A gradual, quasi-static propagation of the twisting crack is compute-bound on a 16 GB workstation
 (about four minutes per time step during propagation, peak memory about 2.8 GB); the snap-through
 provides the final surface. A smooth propagation sequence requires a parallel (MPI) run.
+
+**Reproducibility (2026-09-26).** The July settings for these two runs were not recorded, and at
+their default end times the shipped decks stop before propagation: the 3D block keeps its seeded
+crack (256 fully cracked nodes at t = 0.006), and in the rotating-plywood block the crack front
+advances only from x = 0.389 to 0.417 by t = 0.004. Runs loaded further reached the onset of
+propagation (721 fully cracked nodes by t = 0.0126 in the block, 918 by t = 0.0049 in the twisting
+stack) before the memory guard stopped them on a host that was shared with other jobs. Figure 4 and
+the 3D animation are therefore from the July runs. To regenerate them, run
+`tm6_stageD_3d.i` with `Executioner/end_time=0.02` and `tm6_3d_twist_example.i` with
+`Executioner/end_time=0.006` to completion on an otherwise idle machine, then
+`docs/figures/src/make_figures.py --only gifs --only crack_twist_through_thickness`.
 
 ## 7. Non-fused woven lattices: contact and fracture
 
