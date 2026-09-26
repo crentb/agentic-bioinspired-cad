@@ -46,15 +46,24 @@ def test_skip_while_approved(tmp_path, settings):
     update = RefineStep(chat, executor, None, settings)(
         state_after_rejection(tmp_path, approved=True, refine_count=1)
     )
-    assert update == {"refine_count": 2}
+    assert update == {"refine_count": 2, "stalled": False}
     assert chat.calls == [] and executor.calls == []
+
+
+def test_a_skip_visit_clears_an_earlier_stall(tmp_path, settings):
+    # stall -> approve -> gate -> refine (skipped while approved): the skip must not carry the
+    # earlier stall into the next critique, which would end the run "stalled" on a later reject.
+    chat, executor = ScriptedChat([]), ScriptedExecutor([])
+    state = state_after_rejection(tmp_path, approved=True, refine_count=2, stalled=True)
+    update = RefineStep(chat, executor, None, settings)(state)
+    assert update["stalled"] is False
 
 
 def test_no_code_reply_changes_nothing_but_the_count(tmp_path, settings):
     for reply in ("", ChatError("down")):
         chat, executor = ScriptedChat([reply]), ScriptedExecutor([])
         update = RefineStep(chat, executor, None, settings)(state_after_rejection(tmp_path))
-        assert update == {"refine_count": 1} and executor.calls == []
+        assert update == {"refine_count": 1, "stalled": False} and executor.calls == []
 
 
 def test_successful_edit(tmp_path, settings):

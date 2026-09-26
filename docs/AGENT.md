@@ -505,6 +505,8 @@ and replies without code count against `ABCAD_MAX_ITER`. Then:
    critic.
 4. A candidate whose digest equals an earlier refine output sets `stalled`. It is still executed
    and critiqued once, and the router then ends the run `stalled` unless that critique approves.
+   Every refine visit starts with the flag cleared, so a visit that skips or receives no code never
+   carries an earlier stall into a later critique.
 5. The candidate executes as `design_iter_<k>` (debug copy `design_iter_<k>.py`). On success it
    becomes the latest good script and the best artifact; on failure `approved` is set to false
    and the router sends it to repair.

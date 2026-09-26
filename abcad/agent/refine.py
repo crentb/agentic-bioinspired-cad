@@ -109,7 +109,9 @@ class RefineStep:
         """Run one refine visit and return the state update."""
         settings = self._settings
         k = int(state.get("refine_count") or 0) + 1
-        update: dict[str, Any] = {"refine_count": k}
+        # Every visit starts unstalled: the flag describes this visit's candidate only, so a skip
+        # or no-code visit never carries an earlier stall into a later critique.
+        update: dict[str, Any] = {"refine_count": k, "stalled": False}
         LOGGER.info("refine iteration %d", k)
         event("refine_iteration", k=k)
 
