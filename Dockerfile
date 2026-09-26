@@ -44,10 +44,10 @@ WORKDIR /app
 COPY pyproject.toml README.md LICENSE NOTICE ./
 
 # --- 2. Package sources, shipped data, evidence records and tests ------------
-# data/ holds the retrieval corpora and exemplar scripts the loop grounds on;
+# abcad/ carries the package and its shipped data (abcad/data: the retrieval
+# corpora, reference renders and exemplar scripts the loop grounds on);
 # results/ holds the text evidence records the gold tests re-verify.
 COPY abcad/ abcad/
-COPY data/ data/
 COPY results/ results/
 COPY tests/ tests/
 
