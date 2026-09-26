@@ -1,0 +1,258 @@
+# =============================================================================
+# Release / Continuous Delivery for agentic-bioinspired-cad.
+#
+# Trigger: pushing a semantic-version tag (v*). CI (ci.yml) runs on pushes to
+# main and does not run on tags, so this workflow is what a tag executes.
+#
+# Nothing here publishes anything the gates have not just re-proven green ON
+# THE TAGGED COMMIT: `verify` re-runs the ENTIRE ci.yml (quality + packaging +
+# security + container scan + signed SBOM) through `workflow_call`, and every
+# publish job depends on it. A tag whose commit fails CI publishes nothing.
+#
+# Pipeline (each job escalates only the privileges it needs):
+#   verify          full CI gate on the tagged commit                (read + OIDC for SBOM signing)
+#   build           version-consistency gate, sdist + wheel, twine   (read only; NO OIDC token)
+#   pypi            publish the exact artifacts `build` produced      (OIDC Trusted Publishing only)
+#   ghcr            build, scan BEFORE push, push, sign by digest,
+#                   SLSA build-provenance attestation                 (packages + OIDC + attestations)
+#   github-release  GitHub Release from the CHANGELOG section, with
+#                   the distributions attached; a published GitHub
+#                   Release is also what archives the tag on Zenodo  (contents: write)
+#
+# Why `build` and `pypi` are separate jobs: the job holding the id-token that
+# can publish to PyPI never executes the build backend or any project code, so
+# a compromised build step cannot mint a publishing credential.
+#
+# Credential posture -- zero stored secrets anywhere in this pipeline:
+#   PyPI   = OIDC Trusted Publishing (no token)
+#   GHCR   = the ephemeral, run-scoped GITHUB_TOKEN
+#   cosign = keyless via Sigstore (no private key exists)
+#
+# Consumer verification:
+#   cosign verify ghcr.io/crentb/agentic-bioinspired-cad:<tag> \
+#     --certificate-identity-regexp 'github.com/crentb/' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com
+#   gh attestation verify oci://ghcr.io/crentb/agentic-bioinspired-cad:<tag> \
+#     --owner crentb
+# =============================================================================
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+# Least-privilege default. Each job below escalates only to what it needs, so
+# the reason for every extra privilege is visible at its point of use.
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Re-prove the tagged commit against the full CI gate.
+  # ---------------------------------------------------------------------------
+  verify:
+    name: Re-run the full CI gate on the tagged commit
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      id-token: write # ci.yml's docker-build job signs its SBOM keylessly
+
+  # ---------------------------------------------------------------------------
+  # 2. Build the distributions once; every later job ships these exact bytes.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Version gate + build sdist and wheel
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Version consistency gate — GATING
+        # The tag, pyproject.toml, CITATION.cff and abcad.__version__ must all
+        # agree. A PyPI version number is permanent, so a mismatch is caught
+        # here, before anything is uploaded.
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          CFF_VERSION=$(sed -nE 's/^version: *"?([^"]+)"?$/\1/p' CITATION.cff)
+          MOD_VERSION=$(sed -nE 's/^__version__ = "([^"]+)"$/\1/p' abcad/__init__.py)
+          echo "tag=${TAG_VERSION} pyproject=${PKG_VERSION} citation=${CFF_VERSION} module=${MOD_VERSION}"
+          test "${TAG_VERSION}" = "${PKG_VERSION}"
+          test "${TAG_VERSION}" = "${CFF_VERSION}"
+          test "${TAG_VERSION}" = "${MOD_VERSION}"
+          grep -q "^## \[${TAG_VERSION}\]" CHANGELOG.md || { echo "CHANGELOG.md has no [${TAG_VERSION}] section"; exit 1; }
+
+      - name: Build sdist + wheel and validate metadata — GATING
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          twine check --strict dist/*
+
+      - name: Upload the distributions for the publish jobs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # 3. PyPI: publish the built distributions via Trusted Publishing.
+  # ---------------------------------------------------------------------------
+  pypi:
+    name: Publish sdist + wheel to PyPI (Trusted Publishing)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Must match the Environment registered on the PyPI trusted publisher, and
+    # gives the release a single place to add manual approval.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/agentic-bioinspired-cad/
+    permissions:
+      id-token: write # the OIDC identity PyPI verifies; no password is sent
+    steps:
+      - name: Download the distributions built (and gated) above
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        # No `password:` -- the action exchanges the OIDC token granted above
+        # for a short-lived, upload-scoped PyPI token, and also generates and
+        # uploads PEP 740 digital attestations for each distribution.
+
+  # ---------------------------------------------------------------------------
+  # 4. GHCR: scan, push, sign by digest, and attest build provenance.
+  # ---------------------------------------------------------------------------
+  ghcr:
+    name: Publish signed container + SLSA provenance to GHCR
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io/crentb/agentic-bioinspired-cad
+      id-token: write # cosign keyless signing + provenance attestation
+      attestations: write # store the SLSA attestation against the image
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # ephemeral, scoped to this run
+
+      - name: Build the release image (kept local so it is scanned before push)
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" .
+
+      - name: Scan the image BEFORE it is published — GATING
+        # Deliberately ordered before the push: a pushed tag is visible (and
+        # pullable) the instant it lands. Gate on ACTIONABLE vulnerabilities
+        # only; an unfixed CVE stays visible in the log and starts gating the
+        # moment a fix ships.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      - name: Push the image and capture its immutable digest
+        id: push
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          docker push "${IMAGE}:${TAG}"
+          docker push "${IMAGE}:latest"
+          # Sign and attest the DIGEST, never the tag: tags are mutable
+          # pointers, digests are the content itself. RepoDigests is only
+          # populated once the push has succeeded.
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE}:${TAG}" | cut -d@ -f2)
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+
+      - name: Sign the published image by digest (cosign keyless)
+        # GitHub's OIDC identity for THIS run signs through Sigstore; the
+        # signature lands in the public Rekor transparency log, and the
+        # certificate binds it to this repository and workflow.
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+
+      - name: Attest SLSA build provenance
+        # Machine-verifiable answer to "what source and what builder produced
+        # this exact image?", attached to the image in the registry so it
+        # travels with the artifact.
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  # ---------------------------------------------------------------------------
+  # 5. GitHub Release: notes from CHANGELOG.md, distributions attached.
+  #    Deliberately does not wait on `pypi`: a PyPI outage (or a publisher not
+  #    yet registered) must not block the source release and its archival.
+  # ---------------------------------------------------------------------------
+  github-release:
+    name: Create the GitHub Release
+    needs: [build, ghcr]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the Release object and upload its assets
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the distributions
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: dist
+          path: dist/
+
+      - name: Extract this version's notes from CHANGELOG.md
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # Print the body of the "## [VERSION]" section, stopping at the next
+          # "## [" heading (Keep a Changelog layout).
+          awk -v v="${VERSION}" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          test -s RELEASE_NOTES.md
+
+      - name: Publish the Release with the distributions attached
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag

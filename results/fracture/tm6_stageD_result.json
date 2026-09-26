@@ -1,0 +1,11 @@
+{
+ "model": "full (no symmetry) phase-field, internal seeded crack, VI irreversibility",
+ "deflection_drift_by_angle_deg": {
+  "0": 0.005,
+  "30": -0.47,
+  "60": 0.48,
+  "90": 0.005
+ },
+ "finding": "rod orientation steers the crack: 0/90 (axis-aligned) straight; 30/60 deflect opposite dirs, symmetric about 45 = the toughness-peak angle",
+ "scope": "D1 single uniform orientation; D2 (angle varying with height = true Bouligand twist) is next"
+}

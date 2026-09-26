@@ -1,0 +1,21 @@
+{
+  "stl": "out/woven_fea_small.stl",
+  "voxel_mm": 0.8,
+  "downsample": 1,
+  "footprint_area_mm2": 829.44,
+  "height_mm": 33.6,
+  "n_hex": 17685,
+  "n_nodes": 28565,
+  "grid_shape": [
+    42,
+    42,
+    42
+  ],
+  "spans_both_plates": true,
+  "plate_thickness_mm": 2.4,
+  "plate_overlap_mm": 1.6,
+  "plate_thickness_voxels": 3,
+  "plate_overlap_voxels": 2,
+  "grid_extra_below_voxels": 0,
+  "grid_extra_above_voxels": 0
+}

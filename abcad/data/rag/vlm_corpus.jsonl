@@ -1,0 +1,2 @@
+{"category": "woven", "subcategory": "cubic lattice", "caption": "woven cubic lattice metamaterial: bundles of helical fibers wound around every cube edge, entangled at shared corner nodes into an open wire-like lattice", "path": "renders/woven_cubic_lattice.png"}
+{"category": "helicoidal", "subcategory": "bouligand", "caption": "Bouligand structure, a helicoidal double-twist laminate: a twisted plywood stack of flat plies, each layer rotated by a constant pitch angle", "path": "renders/bouligand_rotating_ply.png"}

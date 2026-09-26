@@ -1,0 +1,11 @@
+file,bbox_x_mm,bbox_y_mm,bbox_z_mm,volume_ml,resin_mass_g,watertight,manifold,overhang_area_frac,voxel_mm,min_formable_d_mm,max_inscribed_diam_mm,enclosed_void_count,enclosed_void_ml,lost_frac_d0.3,lost_frac_d0.5,lost_frac_d0.8,lost_frac_d1.2,gap_frac_g0.3,gap_frac_g0.5,gap_frac_g0.8,verdict_fdm,verdict_resin
+dt.stl,56.57,56.57,8.02,13.869,15.3,True,True,0.4549,0.177,0.3,1.77,6,0.0,0.0,0.1797,0.2335,0.307,0.0,0.2742,0.3968,SCALE/REDESIGN,PRINT w/ fixes
+h_solid.stl,56.35,56.35,7.22,12.672,13.9,True,True,0.4533,0.176,0.3,1.45,0,0.0,0.0,0.0744,0.158,0.207,0.0,0.2599,0.4215,SCALE/REDESIGN,PRINT
+woven_bcc.stl,86.42,86.42,86.41,3.74,4.1,True,True,0.1542,0.27,0.3,0.94,0,0.0,0.0,0.0,0.9819,1.0,0.0,0.0,0.0395,SCALE/REDESIGN,PRINT
+woven_cubic.stl,96.04,96.04,96.04,5.123,5.6,True,True,0.1272,0.3,0.3,0.85,0,0.0,0.0,0.0,0.2985,1.0,0.0,0.0,0.0262,SCALE/REDESIGN,PRINT
+woven_cubic_blender.stl,96.04,96.04,96.04,5.246,5.8,True,True,0.1318,0.3,0.3,0.85,0,0.0,0.0,0.0,0.2749,1.0,0.0,0.0,0.0264,SCALE/REDESIGN,PRINT
+woven_diamond.stl,86.25,86.25,86.25,6.491,7.1,True,True,0.1518,0.27,0.3,0.93,0,0.0,0.0,0.0,0.9504,1.0,0.0,0.0,0.0593,SCALE/REDESIGN,PRINT
+woven_fea_small.stl,29.12,29.12,29.11,3.893,4.3,True,True,0.1411,0.12,0.3,1.95,728,0.002,0.0026,0.0082,0.017,0.016,0.042,0.0862,0.1583,SCALE/REDESIGN,PRINT w/ fixes
+woven_fea_test.stl,37.37,37.37,37.37,4.993,5.5,True,True,0.1419,0.12,0.3,1.96,0,0.0,0.0026,0.0079,0.0153,0.0136,0.0323,0.0712,0.1441,SCALE/REDESIGN,PRINT
+woven_octahedron.stl,91.44,91.95,91.95,5.655,6.2,True,True,0.1454,0.287,0.3,0.81,0,0.0,0.0,0.0,0.4024,1.0,0.0,0.0,0.0352,SCALE/REDESIGN,PRINT
+ws.stl,90.6,90.6,90.6,8.248,9.1,True,True,0.1322,0.283,0.3,1.13,0,0.0,0.0,0.0,0.1281,1.0,0.0,0.0,0.0323,SCALE/REDESIGN,PRINT

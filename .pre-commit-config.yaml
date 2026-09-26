@@ -1,0 +1,38 @@
+# Pre-commit hooks: run `pre-commit install` once, then these execute on every
+# `git commit`, catching what the CI gates on *before* it ever reaches CI.
+# Tool versions match the [dev] pins in pyproject.toml and the CI workflow.
+repos:
+  # Secret detection, shift-left: the same scanner (and version) that gates CI
+  # over the full history. A credential caught here never enters history at all,
+  # which is the only place it can be removed cheaply.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Ruff: lint (with safe auto-fixes). Matches the CI `ruff check .` gate.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      - id: ruff
+        args: [--fix]
+
+  # Black: the single source of truth for formatting. Matches `black --check .`.
+  - repo: https://github.com/psf/black
+    rev: 26.5.1
+    hooks:
+      - id: black
+
+  # Small, fast hygiene hooks.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: [--maxkb=3072] # block accidental geometry/mesh commits (largest tracked asset: README GIFs)

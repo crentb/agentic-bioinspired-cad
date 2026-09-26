@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.28,
+  "A0_mm2": 1225.0,
+  "H0_mm": 28.0,
+  "reaction_force_N": 10314.133874911351,
+  "nominal_stress_MPa": 8.419701122376614,
+  "avg_sigma_zz_MPa": 16.82566700638067,
+  "avg_von_mises_MPa": 17.607125014307993,
+  "E_eff_MPa": 841.9701122376614,
+  "E_eff_fraction_of_solid": 0.28065670407922044,
+  "mesh": "out/damage_tolerance/bouligand_d30_w/intact.msh"
+}

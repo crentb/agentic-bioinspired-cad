@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.15,
+  "A0_mm2": 3025.0,
+  "H0_mm": 15.0,
+  "reaction_force_N": 21880.914813630796,
+  "nominal_stress_MPa": 7.233360268968858,
+  "avg_sigma_zz_MPa": 7.679919959657314,
+  "avg_von_mises_MPa": 9.525745681832886,
+  "E_eff_MPa": 723.3360268968858,
+  "E_eff_fraction_of_solid": 0.2411120089656286,
+  "mesh": "out/damage_tolerance/dt/damaged_2.msh"
+}

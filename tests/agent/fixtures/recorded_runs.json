@@ -1,0 +1,104 @@
+{
+  "_about": "Recorded-run numbers for the replay tests, transcribed from the specification's evidence index (Appendix A) and, for run 15, from results/agent_runs/2026-07-05_12-37-42/run_manifest.json. Entries marked illustrative were not part of the record and only need to be plausible; the replays never assert on them.",
+  "prompt": "a woven cubic lattice metamaterial",
+  "fixture_error": "'Object' object has no attribute 'splines'",
+  "verdicts": {
+    "good": {
+      "match_quality": "good",
+      "physical_stability": "stable",
+      "comment": "Accurately depicts a woven cubic lattice with helical fibers and entangled corner nodes.",
+      "approve": true
+    },
+    "partial": {
+      "match_quality": "partial",
+      "physical_stability": "stable",
+      "comment": "Lacks clear helical fiber bundles per cube edge as specified in reference image 1.",
+      "approve": false
+    }
+  },
+  "runs": {
+    "R14": {
+      "recorded_as": "2026-07-05_12-12-45",
+      "mesh_stats": {"bbox_mm": [90.6, 90.6, 90.597], "overhang_area_frac": 0.1392}
+    },
+    "R15": {
+      "recorded_as": "2026-07-05_12-37-42",
+      "mesh_stats": {"bbox_mm": [90.6, 90.6, 90.6], "overhang_area_frac": 0.1357},
+      "audit": {
+        "original": {
+          "surface": {"bbox_mm": [90.6, 90.6, 90.6], "volume_ml": 28.74, "watertight": true, "manifold": false, "overhang_area_frac": 0.1306},
+          "voxel": {"voxel_mm": 0.283, "max_formable_d_mm": 0.5, "lost_frac_at_d": {"0.3": 0.0, "0.5": 0.0, "0.8": 0.137, "1.2": 1.0}, "enclosed_void_count": 24},
+          "grade": {
+            "verdict": "SCALE/REDESIGN",
+            "issues": ["14% of material thinner than 0.8 mm"],
+            "recommendations": [
+              "note: non-manifold edges present (bevel miter folds) — slicers union these; verify the slice preview at fiber crossings",
+              "scale up x1.6 (features certified at 0.5 mm vs the 0.8 mm limit) or thicken fibers",
+              "note: 5% of inter-fiber gaps < ~0.8 mm — expect local fiber fusion"
+            ]
+          }
+        },
+        "variant": {
+          "_illustrative": "surface and voxel values other than max_formable_d_mm",
+          "surface": {"bbox_mm": [144.96, 144.96, 144.96], "volume_ml": 117.72, "watertight": true, "manifold": true, "overhang_area_frac": 0.1306},
+          "voxel": {"voxel_mm": 0.45, "max_formable_d_mm": 0.8, "lost_frac_at_d": {"0.8": 0.0}, "enclosed_void_count": 24},
+          "grade": {"verdict": "PRINT", "issues": [], "recommendations": []}
+        }
+      }
+    },
+    "R16": {
+      "recorded_as": "2026-07-05_14-04-06",
+      "mesh_stats": {"bbox_mm": [90.6, 90.6, 90.6], "overhang_area_frac": 0.1357},
+      "audit": {
+        "original": {
+          "surface": {"bbox_mm": [90.6, 90.6, 90.6], "volume_ml": 14.37, "watertight": true, "manifold": false, "overhang_area_frac": 0.1341},
+          "voxel": {"voxel_mm": 0.283, "max_formable_d_mm": 0.5, "lost_frac_at_d": {"0.3": 0.0, "0.5": 0.0, "0.8": 0.1345, "1.2": 1.0}, "enclosed_void_count": 0},
+          "grade": {
+            "verdict": "SCALE/REDESIGN",
+            "issues": ["13% of material thinner than 0.8 mm"],
+            "recommendations": [
+              "note: non-manifold edges present (bevel miter folds) — slicers union these; verify the slice preview at fiber crossings",
+              "scale up x1.6 (features certified at 0.5 mm vs the 0.8 mm limit) or thicken fibers"
+            ],
+            "_illustrative": "recommendation texts (the record gives only their count)"
+          }
+        },
+        "variant": {
+          "_illustrative": "surface and voxel values other than max_formable_d_mm",
+          "surface": {"bbox_mm": [144.96, 144.96, 144.96], "volume_ml": 58.86, "watertight": true, "manifold": true, "overhang_area_frac": 0.1341},
+          "voxel": {"voxel_mm": 0.45, "max_formable_d_mm": 0.8, "lost_frac_at_d": {"0.8": 0.0}, "enclosed_void_count": 0},
+          "grade": {"verdict": "PRINT", "issues": [], "recommendations": []}
+        }
+      }
+    },
+    "R06": {
+      "recorded_as": "2026-07-03_10-53-47",
+      "mesh_stats": {"bbox_mm": [90.6, 90.6, 90.597], "overhang_area_frac": 0.1389}
+    },
+    "R09": {
+      "recorded_as": "2026-07-03_11-15-14",
+      "mesh_stats": {"bbox_mm": [90.6, 90.6, 90.6], "overhang_area_frac": 0.1341},
+      "audit": {
+        "original": {
+          "surface": {"bbox_mm": [90.6, 90.6, 90.6], "volume_ml": 14.37, "watertight": true, "manifold": false, "overhang_area_frac": 0.1341},
+          "voxel": {"voxel_mm": 0.283, "max_formable_d_mm": 0.5, "lost_frac_at_d": {"0.3": 0.0, "0.5": 0.0, "0.8": 0.1345, "1.2": 1.0}, "enclosed_void_count": 0},
+          "grade": {
+            "verdict": "SCALE/REDESIGN",
+            "issues": ["mesh not watertight/manifold", "13% of material thinner than 0.8 mm"],
+            "recommendations": [
+              "repair the mesh so it is watertight and manifold before slicing",
+              "scale up x1.6 (features certified at 0.5 mm vs the 0.8 mm limit) or thicken fibers"
+            ],
+            "_illustrative": "recommendation texts"
+          }
+        },
+        "variant": {
+          "_illustrative": "surface and voxel values other than max_formable_d_mm",
+          "surface": {"bbox_mm": [144.96, 144.96, 144.96], "volume_ml": 58.86, "watertight": true, "manifold": false, "overhang_area_frac": 0.1341},
+          "voxel": {"voxel_mm": 0.45, "max_formable_d_mm": 0.8, "lost_frac_at_d": {"0.8": 0.0}, "enclosed_void_count": 0},
+          "grade": {"verdict": "PRINT w/ fixes", "issues": ["mesh not watertight/manifold"], "recommendations": []}
+        }
+      }
+    }
+  }
+}

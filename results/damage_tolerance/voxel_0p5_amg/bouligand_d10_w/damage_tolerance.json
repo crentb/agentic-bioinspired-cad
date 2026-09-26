@@ -1,0 +1,54 @@
+{
+  "stl": "out/pitch_sweep/bouligand_d10_w.stl",
+  "mesh_recipe": {
+    "voxel_mm": 0.5,
+    "plate_mm": 2.0,
+    "overlap_mm": 0.8
+  },
+  "flaw_model": {
+    "samples": 3,
+    "nflaws": 3,
+    "flaw_radius_mm": 1.5,
+    "seed": 20260703,
+    "mean_dose": 0.0036
+  },
+  "intact_E_eff_MPa": 446.277,
+  "samples": [
+    {
+      "replicate": 0,
+      "seed": 20260703,
+      "nflaws": 3,
+      "flaw_radius_mm": 1.5,
+      "removed_rod_frac": 0.004,
+      "kept_frac_after_damage": 1.0,
+      "n_hex": 106965,
+      "E_eff_MPa": 443.219,
+      "retention": 0.9931
+    },
+    {
+      "replicate": 1,
+      "seed": 20260704,
+      "nflaws": 3,
+      "flaw_radius_mm": 1.5,
+      "removed_rod_frac": 0.0033,
+      "kept_frac_after_damage": 0.9999,
+      "n_hex": 106991,
+      "E_eff_MPa": 442.208,
+      "retention": 0.9909
+    },
+    {
+      "replicate": 2,
+      "seed": 20260705,
+      "nflaws": 3,
+      "flaw_radius_mm": 1.5,
+      "removed_rod_frac": 0.0034,
+      "kept_frac_after_damage": 1.0,
+      "n_hex": 107001,
+      "E_eff_MPa": 442.431,
+      "retention": 0.9914
+    }
+  ],
+  "mean_retention": 0.9918,
+  "min_retention": 0.9909,
+  "note": "retention vs (1 - dose): above = redundant/damage-tolerant load paths, below = brittle load-path architecture. Linear small-strain stiffness metric."
+}

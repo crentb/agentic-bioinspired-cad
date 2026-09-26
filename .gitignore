@@ -1,0 +1,63 @@
+# --- Python bytecode / build artifacts ------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+*.whl
+
+# --- Virtual environments --------------------------------------------------
+# (the conda lockfiles live in env/*.lock.yml and ARE tracked, so only the
+#  conventional venv directory names are ignored here)
+.venv/
+venv/
+
+# --- Tooling caches --------------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- Run outputs (large; regenerable from code + parameters) ----------------
+# Every tool writes under ./out (override with ABCAD_OUT). The curated text
+# evidence records that back the documented results live in results/ instead.
+out/
+# Geometry, meshes, solver fields and caches are never committed.
+*.stl
+*.msh
+*.vtk
+*.vtu
+*.vtp
+*.xdmf
+*.h5
+*.exo
+*.e
+*.npz
+*.blend
+*.blend1
+
+# --- LaTeX auxiliary files (the .tex sources and built PDFs are tracked) ----
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.out
+*.toc
+
+# --- Curated evidence records are ALWAYS tracked ----------------------------
+# results/ holds only small text records (JSON/CSV/MD/logs) that back the
+# documented numbers; this negation keeps them tracked even when an extension
+# above (e.g. *.log) would otherwise exclude them.
+!results/**
+
+# --- OS / editor cruft -----------------------------------------------------
+.DS_Store
+*.swp
+.idea/
+.vscode/

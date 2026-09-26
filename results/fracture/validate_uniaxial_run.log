@@ -1,0 +1,96 @@
+
+
+*** Info ***
+abcad/fracture/decks/validate_uniaxial.i:29.3:
+The following occurred in the Action 'all' of type QuasiStaticSolidMechanicsPhysics.
+
+SolidMechanics Action: selecting 'total small strain' formulation. Use `incremental = true` to select 'incremental small strain' instead.
+Framework Information:
+MOOSE Version:           git commit a628b5c0 on 2026-07-01
+LibMesh Version:         
+PETSc Version:           3.25.2
+SLEPc Version:           3.25.0
+Current Time:            Sun Jul  5 17:24:26 2026
+Executable Timestamp:    Sun Jul  5 15:52:55 2026
+
+Input File(s):
+  abcad/fracture/decks/validate_uniaxial.i
+
+Command Line Argument(s):
+  --n-threads=1
+
+Checkpoint:
+  Wall Time Interval:      Every 3600 s
+  Checkpoint:              Outputs/checkpoint
+  # Checkpoints Kept:      2
+  Execute On:              TIMESTEP_END 
+
+Parallelism:
+  Num Processors:          1
+  Num Threads:             1
+
+Mesh: 
+  Parallel Type:           replicated
+  Mesh Dimension:          3
+  Spatial Dimension:       3
+  Nodes:                   225
+  Elems:                   128
+  Num Subdomains:          1
+
+Nonlinear System:
+  Num DOFs:                675
+  Num Local DOFs:          675
+  Variables:               { "disp_x" "disp_y" "disp_z" } 
+  Finite Element Types:    "LAGRANGE" 
+  Approximation Orders:    "FIRST" 
+
+Auxiliary System:
+  Num DOFs:                256
+  Num Local DOFs:          256
+  Variables:               { "stress_zz" "strain_zz" } 
+  Finite Element Types:    "MONOMIAL" 
+  Approximation Orders:    "CONSTANT" 
+
+Execution Information:
+  Executioner:             Steady
+  Solver Mode:             NEWTON 
+  PETSc Preconditioner:    hypre boomeramg strong_threshold: 0.7 (auto)
+  MOOSE Preconditioner:    SMP (auto) 
+
+
+Postprocessor Values:
++----------------+----------------+----------------+
+| time           | avg_strain_zz  | avg_stress_zz  |
++----------------+----------------+----------------+
+|   0.000000e+00 |   0.000000e+00 |   0.000000e+00 |
++----------------+----------------+----------------+
+
+ 0 Nonlinear |R| = 1.910871e+03
+      0 Linear |R| = 1.910871e+03
+      1 Linear |R| = 1.444921e+02
+      2 Linear |R| = 3.049213e+01
+      3 Linear |R| = 7.352339e+00
+      4 Linear |R| = 1.295166e+00
+      5 Linear |R| = 1.753241e-01
+      6 Linear |R| = 1.638351e-02
+ 1 Nonlinear |R| = 1.638351e-02
+      0 Linear |R| = 1.638351e-02
+      1 Linear |R| = 3.716964e-03
+      2 Linear |R| = 4.181369e-04
+      3 Linear |R| = 7.157558e-05
+      4 Linear |R| = 1.625009e-05
+      5 Linear |R| = 2.855059e-06
+      6 Linear |R| = 4.723159e-07
+      7 Linear |R| = 7.332274e-08
+ 2 Nonlinear |R| = 7.332276e-08
+ Solve Converged!
+
+Postprocessor Values:
++----------------+----------------+----------------+
+| time           | avg_strain_zz  | avg_stress_zz  |
++----------------+----------------+----------------+
+|   0.000000e+00 |   0.000000e+00 |   0.000000e+00 |
+|   1.000000e+00 |   1.000000e-02 |   3.000000e+01 |
++----------------+----------------+----------------+
+
+

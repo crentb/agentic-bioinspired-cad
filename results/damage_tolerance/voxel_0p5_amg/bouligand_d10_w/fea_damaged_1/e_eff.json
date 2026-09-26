@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.255,
+  "A0_mm2": 1278.0,
+  "H0_mm": 25.5,
+  "reaction_force_N": 5651.415997622826,
+  "nominal_stress_MPa": 4.422078245401272,
+  "avg_sigma_zz_MPa": 9.930425994271399,
+  "avg_von_mises_MPa": 12.531461385440586,
+  "E_eff_MPa": 442.20782454012715,
+  "E_eff_fraction_of_solid": 0.1474026081800424,
+  "mesh": "out/damage_tolerance_v05/bouligand_d10_w/damaged_1.msh"
+}

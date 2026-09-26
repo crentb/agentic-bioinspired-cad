@@ -1,0 +1,10 @@
+# Code owners are requested for review automatically on every pull request.
+# With branch protection's "require review from code owners", no change to
+# main (including to the CI/CD pipeline itself) merges without the owner.
+*                   @crentb
+
+# The delivery pipeline and security policy are called out explicitly: a change
+# here alters what is built, scanned, signed and published.
+/.github/           @crentb
+/Dockerfile         @crentb
+/SECURITY.md        @crentb

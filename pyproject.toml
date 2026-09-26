@@ -1,0 +1,184 @@
+# =============================================================================
+# Packaging + tooling configuration for agentic-bioinspired-cad (PEP 621).
+#
+# Purpose:   make the project pip-installable ("pip install -e .") and declare
+#            its dependencies, entry points, test markers, and lint / format /
+#            type-check / security-scan settings in one place, so the same
+#            configuration drives local development, CI and the container.
+# Why split: the host-side engines (Blender, the conda CAD/FEA environments,
+#            MOOSE, Ollama, PyTorch + model weights) are heavy and platform-
+#            specific, so they live in optional extras (or outside pip
+#            entirely) and stay OUT of the default install and of CI, which
+#            exercise the pure-Python logic and the evidence-record checks.
+# =============================================================================
+
+[build-system]
+# setuptools >= 77 implements PEP 639 (SPDX `license` expression + `license-files`).
+requires      = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name            = "agentic-bioinspired-cad"
+version         = "0.1.0"
+description     = "Local agentic LLM-to-CAD-to-FEA-to-print loop for single-material, damage-tolerant bioinspired architectures."
+readme          = "README.md"
+requires-python = ">=3.10"
+# SPDX expression (PEP 639). The license files below are copied into every
+# sdist and wheel; the vendored woven-lattice LICENSE (MIT) must ship with the
+# code it covers, which is what keeps redistribution compliant.
+license         = "Apache-2.0"
+license-files   = ["LICENSE", "NOTICE", "abcad/_vendor/woven_lattice/LICENSE"]
+authors         = [{ name = "Cameron B. Renteria", email = "crentb@uw.edu" }]
+keywords = [
+    "bioinspired design", "architected materials", "damage tolerance", "Bouligand",
+    "woven lattice", "tooth enamel", "generative CAD", "large language models",
+    "agentic workflow", "finite element analysis", "phase-field fracture",
+    "additive manufacturing",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+]
+
+# Core runtime deps: light and pure-Python-friendly, installed everywhere.
+# These are all the default test suite and CI need.
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+# Mesh I/O, repair, rendering and the print audit (the conda cad_env provides
+# these plus CadQuery; see env/cad_env.lock.yml).
+mesh = [
+    "numpy-stl>=3.1",   # woven Blender-free sweep, enamel STL export
+    "pyvista>=0.43",    # watertight checks, voxelization, renders (brings vtk)
+    "matplotlib>=3.7",  # the woven engine's tube mesher (matplotlib.tri) and plots
+]
+# Finite-element drivers. SfePy itself is installed with conda
+# (env/sfepy_env.lock.yml). biomimetic-lattice-pipeline is the author's
+# published FEA package whose run context the linear tension driver uses; the
+# stock SfePy problem definition it runs (geometry/compression_test.py) ships
+# only in that project's source checkout, located via ABCAD_BIOMIMETIC_PIPELINE.
+fea = [
+    "meshio>=5.3",                       # voxel-hex mesh export (gmsh 2.2)
+    "pyamg>=5.0",                        # algebraic-multigrid solver (ABCAD_FEA_SOLVER=amg)
+    "biomimetic-lattice-pipeline>=0.2",  # run context for the linear tension driver
+]
+# The agentic design loop (code emitter, retrieval, critic and repair agents).
+agent = [
+    "torch>=2.2",
+    "transformers>=4.44",
+    "peft>=0.12",
+    "accelerate>=0.33",
+    "sentence-transformers>=3.0",
+    "Pillow>=10.0",
+]
+# Dev tools are PINNED so CI and local agree exactly (unpinned black/ruff drift
+# their stable style across releases and break the format check).
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "ruff==0.16.8",
+    "black==26.5.1",
+    "mypy==2.3.1",
+    "pre-commit>=3.7",
+    "Pillow>=10.0",   # lets the fast suite exercise the critic's image downscaling (lazy import)
+]
+
+# Console entry points for the tools that run in the environment the package is installed into
+# (for the full stack: the conda cad_env). The SfePy finite-strain solver and the MOOSE fracture
+# tools run under their own interpreters and are invoked as `python -m abcad.<module>` or through
+# the justfile recipes instead.
+[project.scripts]
+abcad-agent            = "abcad.agent.cli:main"
+abcad-woven            = "abcad.generators.woven.build:main"
+abcad-enamel           = "abcad.generators.enamel:main"
+abcad-print-audit      = "abcad.printing.print_audit:main"
+abcad-fdm-variants     = "abcad.printing.fdm_variants:main"
+abcad-remesh           = "abcad.printing.remesh_watertight:main"
+abcad-voxel-mesh       = "abcad.fea.voxel_plate_mesh:main"
+abcad-damage-tolerance = "abcad.fea.damage_tolerance:main"
+abcad-mission-control  = "abcad.reporting.mission_control:main"
+
+[project.urls]
+Homepage      = "https://github.com/crentb/agentic-bioinspired-cad"
+Documentation = "https://github.com/crentb/agentic-bioinspired-cad/tree/main/docs"
+Issues        = "https://github.com/crentb/agentic-bioinspired-cad/issues"
+Changelog     = "https://github.com/crentb/agentic-bioinspired-cad/blob/main/CHANGELOG.md"
+
+# Single namespace package; subpackages are discovered recursively. tests/,
+# docs/, results/ and env/ are intentionally excluded from the wheel.
+[tool.setuptools.packages.find]
+where   = ["."]
+include = ["abcad*"]
+
+# Non-Python files that must travel inside the wheel.
+[tool.setuptools.package-data]
+abcad = [
+    "data/rag/*.jsonl",
+    "data/rag/renders/*.png",
+    "data/exemplars/*",
+    "fracture/decks/*.i",
+    "_vendor/woven_lattice/LICENSE",
+    "_vendor/woven_lattice/README.md",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-ra"
+markers = [
+    "slow: needs the host-side stack (Blender, conda cad_env/sfepy_env, MOOSE, Ollama or large local artifacts); skipped in default CI",
+]
+
+[tool.ruff]
+line-length    = 100
+target-version = "py310"
+# _vendor/ is third-party code carried VERBATIM (see its README); it is never
+# reformatted or linted, so its bytes stay identical to the audited upstream.
+# data/ holds retrieval corpora and exemplar TEMPLATES for the code emitter:
+# the exemplars contain `{placeholder}` tokens, so they are data, not Python.
+# tests/agent/fixtures/ holds recorded model output kept byte-for-byte as a regression fixture.
+extend-exclude = ["abcad/_vendor", "abcad/data", "tests/agent/fixtures"]
+
+[tool.ruff.lint]
+# Real-bug rules (pyflakes) + pycodestyle errors + import hygiene.
+select = ["E", "F", "I"]
+#   E501 - long lines: handled by black; many long scientific literals
+#   E402 - import not at top: intentional guarded imports for Blender / conda
+#          interpreters and path setup in standalone scripts
+#   F841 - unused local variable: harmless; cleanup deferred
+ignore = ["E501", "E402", "F841"]
+
+[tool.black]
+line-length    = 100
+target-version = ["py310", "py311", "py312", "py313"]
+extend-exclude = "/(abcad/(_vendor|data)|tests/agent/fixtures)/"
+
+[tool.mypy]
+# No python_version pin: each CI job checks against its own interpreter. A "3.10" pin made
+# mypy abort on numpy >= 2.3 stubs, which use Python 3.12 `type` statements.
+ignore_missing_imports = true # bpy, sfepy, cadquery, pyvista, ... ship no type stubs
+exclude                = ["abcad/_vendor/", "abcad/data/"]
+
+[tool.coverage.run]
+# Measure the package only; the verbatim vendored module is not ours to cover.
+source = ["abcad"]
+omit   = ["abcad/_vendor/*", "abcad/data/*"]
+
+[tool.bandit]
+# Read by `bandit -c pyproject.toml` in CI. The vendored directory is excluded
+# because it is carried verbatim and never modified here, and data/ because it
+# holds template text rather than executable code; everything else in the
+# shipped package is scanned.
+exclude_dirs = ["abcad/_vendor", "abcad/data"]

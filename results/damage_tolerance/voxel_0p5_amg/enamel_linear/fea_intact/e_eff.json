@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.24,
+  "A0_mm2": 650.25,
+  "H0_mm": 24.0,
+  "reaction_force_N": 7126.517796326169,
+  "nominal_stress_MPa": 10.959658279625021,
+  "avg_sigma_zz_MPa": 20.01862791721979,
+  "avg_von_mises_MPa": 20.254624579226462,
+  "E_eff_MPa": 1095.965827962502,
+  "E_eff_fraction_of_solid": 0.36532194265416734,
+  "mesh": "out/damage_tolerance_v05/enamel_linear/intact.msh"
+}

@@ -1,0 +1,4 @@
+file,bbox_x_mm,bbox_y_mm,bbox_z_mm,volume_ml,resin_mass_g,watertight,manifold,overhang_area_frac,voxel_mm,min_formable_d_mm,max_inscribed_diam_mm,enclosed_void_count,enclosed_void_ml,lost_frac_d0.3,lost_frac_d0.5,lost_frac_d0.8,lost_frac_d1.2,gap_frac_g0.3,gap_frac_g0.5,gap_frac_g0.8,verdict_fdm,verdict_resin
+woven_fea_small_x15.stl,43.68,43.68,43.66,13.138,14.5,True,True,0.1418,0.137,0.3,2.91,877,0.005,0.0016,0.0043,0.0099,0.0145,0.0439,0.0823,0.1366,PRINT,PRINT w/ fixes
+woven_fea_small_x20.stl,58.24,58.24,58.22,31.142,34.3,True,True,0.1422,0.182,0.3,3.89,877,0.012,0.0,0.0016,0.005,0.0088,0.0,0.0559,0.1141,PRINT,PRINT w/ fixes
+woven_fea_small_x20_plated.stl,58.24,58.24,63.02,58.278,64.1,True,True,0.1669,0.197,0.3,4.33,821,0.131,0.0,0.0017,0.005,0.0089,0.0,0.0841,0.1701,PRINT w/ fixes,PRINT w/ fixes

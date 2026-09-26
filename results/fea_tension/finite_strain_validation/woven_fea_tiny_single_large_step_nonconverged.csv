@@ -1,0 +1,3 @@
+stretch,disp_mm,strain,reaction_N,nominal_stress_MPa,newton_converged,newton_iters,newton_residual_N
+1.000000,0.000000,0.000000,0.000000,0.000000,1,0,0.000e+00
+1.016667,0.560011,0.016667,321.020203,0.387032,0,12,1.010e+05

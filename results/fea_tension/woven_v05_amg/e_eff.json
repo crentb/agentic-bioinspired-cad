@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.32,
+  "A0_mm2": 841.0,
+  "H0_mm": 32.0,
+  "reaction_force_N": 401.05973690418773,
+  "nominal_stress_MPa": 0.47688434828084153,
+  "avg_sigma_zz_MPa": 1.5197893210124902,
+  "avg_von_mises_MPa": 3.7313684794039648,
+  "E_eff_MPa": 47.688434828084155,
+  "E_eff_fraction_of_solid": 0.01589614494269472,
+  "mesh": "out/fea_amg_unlock/woven_v05.msh"
+}

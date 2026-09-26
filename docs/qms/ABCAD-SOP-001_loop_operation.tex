@@ -1,0 +1,476 @@
+% =====================================================================================
+% ABCAD-SOP-001 -- Standard Operating Procedure
+% End-to-end operation of the agentic-bioinspired-cad generative design and print loop
+%
+% Compile:  latexmk -pdf ABCAD-SOP-001_loop_operation.tex   (from docs/qms/), then latexmk -c
+% This document is a controlled QMS record: update the revision table on ANY change.
+% Companion to ABCAD-QMS-002 (definitions and test methods).
+% =====================================================================================
+\documentclass[11pt]{article}
+
+\usepackage[margin=2.4cm,headheight=28pt]{geometry}
+\usepackage{amssymb}   % \lesssim in the memory-baseline criteria
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{listings}
+\usepackage[hidelinks,pdftitle={ABCAD-SOP-001 Loop Operation SOP},pdfauthor={Cameron B. Renteria}]{hyperref}
+
+% ---- command-listing style (shell snippets) --------------------------------------------
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  frame=single,
+  framerule=0.3pt,
+  xleftmargin=0.6em,
+  aboveskip=0.6em,
+  belowskip=0.6em,
+}
+
+% ---- QMS header/footer ----------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textbf{ABCAD-SOP-001}\quad Rev.~B}
+\fancyhead[R]{\small agentic-bioinspired-cad Quality Management System}
+\fancyfoot[L]{\small Effective: 2026-09-25}
+\fancyfoot[C]{\small CONTROLLED DOCUMENT --- verify revision before use}
+\fancyfoot[R]{\small Page \thepage\ of \pageref{LastPage}}
+
+\newcommand{\acc}[1]{\par\medskip\noindent\fbox{\parbox{0.965\linewidth}{\textbf{Acceptance criteria:} #1}}\medskip}
+
+\title{\textbf{Standard Operating Procedure}\\[4pt]
+\Large End-to-End Operation of the agentic-bioinspired-cad\\ Generative Design \& Single-Material Print Loop\\[6pt]
+\normalsize Document ID: ABCAD-SOP-001 \quad Revision B}
+\author{Prepared and approved by: Cameron B. Renteria}
+\date{Effective date: 2026-09-25}
+
+\begin{document}
+% Long file paths in \texttt cannot hyphenate; let TeX stretch inter-word space instead of
+% overrunning the margin.
+\sloppy
+\setlength{\emergencystretch}{3em}
+\maketitle
+\thispagestyle{fancy}
+
+% =====================================================================================
+\section*{Document control}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Document ID & ABCAD-SOP-001 \\
+Title & End-to-end operation of the agentic-bioinspired-cad generative design \& print loop \\
+Revision & B \\
+Effective date & 2026-09-25 \\
+Prepared by & Cameron B. Renteria \\
+Reviewed / approved by & Cameron B. Renteria \hfill Signature: \rule{2.8cm}{0.3pt} \quad Date: \rule{1.8cm}{0.3pt} \\
+Supersedes & Revision A \\
+\bottomrule
+\end{tabularx}
+
+\subsection*{Revision history}
+\begin{tabularx}{\linewidth}{@{}llX@{}}
+\toprule
+Rev. & Date & Description of change \\
+\midrule
+A & 2026-07-03 & Initial release. \\
+B & 2026-09-25 & Public release. Identifiers renamed to the \texttt{abcad} namespace; host-specific paths
+replaced by \texttt{ABCAD\_*} environment variables; procedure updated to the current loop (in-loop STL
+export, deep print gate with deterministic auto-scale, schema-constrained critic verdicts, run manifest);
+enamel decussation family added to the scope. \\
+\bottomrule
+\end{tabularx}
+
+% =====================================================================================
+\section{Purpose}
+This SOP defines the controlled, repeatable procedure for operating the agentic-bioinspired-cad pipeline
+from a natural-language design request to a \emph{certified-printable} single-material part: local LLM
+code generation $\rightarrow$ Blender geometry realization and rendering $\rightarrow$
+vision-language-model (VLM) critique $\rightarrow$ automated code repair and design refinement
+$\rightarrow$ manufacturability gating with a quantitative print audit $\rightarrow$ printable variant
+preparation $\rightarrow$ (optional) finite-element verification $\rightarrow$ slicing and printing.
+It specifies pre-conditions, per-stage acceptance criteria, system-protection limits, nonconformance
+handling, and the records that constitute run evidence.
+
+\section{Scope}
+\subsection{In scope}
+Operation of the loop on a workstation meeting Section~\ref{sec:equipment} for the three structure
+families of the package (helicoidal/Bouligand laminates, woven lattices, enamel decussation lattices);
+print preparation for fused-deposition modeling (FDM, 0.4\,mm nozzle) and stereolithography (resin)
+processes; the associated verification tooling (Blender-free test suites, print audit, linear and
+finite-strain FEA cross-checks).
+
+\subsection{Out of scope}
+Model training and LoRA fine-tuning; printer hardware maintenance and calibration; resin handling and
+post-cure chemistry; fracture simulation (covered by test method TM-6 of ABCAD-QMS-002); multi-material
+printing (prohibited by design constraint C1, Section~\ref{sec:defs}).
+
+\section{References}
+\begin{itemize}[nosep]
+  \item ABCAD-QMS-002 --- \emph{Quality Definitions \& Test Methods} (vocabulary, test methods TM-1 to TM-6,
+        validity conditions).
+  \item Repository documentation: \texttt{docs/WORKFLOWS.md} (per-structure runbook),
+        \texttt{docs/PRINTING.md} (print audit), \texttt{docs/FEA.md} (FEA instruments),
+        \texttt{docs/PERF.md} (resource envelope), and the agent documentation in \texttt{abcad/agent/}.
+  \item Evidence index: \texttt{results/README.md} (curated records behind the reference values of
+        Appendix~\ref{app:reference}).
+\end{itemize}
+
+\section{Definitions and design constraints}\label{sec:defs}
+\begin{description}[nosep]
+  \item[LoRA] Low-rank adaptation of Llama-3.2-3B-Instruct emitting Blender-Python
+        ``code-as-geometry'' (the Phase-1 code emitter).
+  \item[VLM] Vision-language model critic (\texttt{qwen3-vl:8b} via Ollama) grading renders against
+        retrieved reference images and returning a schema-constrained JSON verdict.
+  \item[RAG] Retrieval-augmented grounding. Text corpus of code exemplars
+        (\texttt{abcad/data/rag/text\_corpus.jsonl}); image corpus of reference renders
+        (\texttt{abcad/data/rag/vlm\_corpus.jsonl} with images in \texttt{abcad/data/rag/renders/}).
+  \item[EDT] Euclidean distance transform; basis of the wall-thickness / clearance audit
+        (morphological opening at diameter $d$: erosion then dilation by $d/2$).
+  \item[$E_\mathrm{eff}$] Effective uniaxial modulus of a lattice specimen,
+        $E_\mathrm{eff} = (F/A_0)/\varepsilon$, with reaction force $F$, nominal footprint $A_0$,
+        nominal strain $\varepsilon$. Scale-invariant for geometrically similar specimens.
+  \item[Watertight / manifold] Zero boundary edges / zero non-manifold edges on the triangulated surface.
+  \item[C1 (constraint)] \textbf{Single material only.} All mechanical function derives from
+        geometry/topology; never a hard/soft material contrast. Literature toughness numbers obtained
+        with a large modulus contrast (e.g.\ Jia \& Wang 2019, $\sim$390$\times$) must not be transferred.
+  \item[C2 (constraint)] \textbf{Memory safety first.} On a 16\,GB host the limits of
+        Section~\ref{sec:safety} are mandatory, not advisory.
+\end{description}
+
+\section{Responsibilities}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Role & Duties under this SOP \\
+\midrule
+Operator & Authorizes heavy runs; establishes the memory baseline (\S\ref{sec:safety}); executes the
+pipeline stages; enforces watchdog limits; owns printer operation, slicing, and physical QC; records
+results; approves deviations; halts and dispositions any acceptance-criteria failure. \\
+Automated subsystems & Code emitter (LoRA), code fixer and code designer (\texttt{qwen2.5-coder:7b}),
+VLM critic (\texttt{qwen3-vl:8b}), manufacturability gate and print audit --- operate only within the
+loop's guardrails. \\
+\bottomrule
+\end{tabularx}
+
+\section{System, equipment, and materials}\label{sec:equipment}
+\subsection{Host}
+Reference host: Apple-silicon macOS workstation with \textbf{16\,GB unified memory} (the limiting
+resource). All commands are issued from the repository root; interpreters and tools are resolved from
+the environment variables below, and every tool writes under \texttt{\$ABCAD\_OUT}.
+
+\subsection{Software environments}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Component & Specification \\
+\midrule
+\texttt{ABCAD\_CAD\_PYTHON} & Interpreter of the conda CAD environment (\texttt{env/cad\_env.lock.yml}):
+numpy, scipy, pyvista/vtk, numpy-stl, cadquery, and the loop's model and retrieval stack. Runs builds,
+audits, renders, retrieval, and the Phase-2 parent process. \\
+\texttt{ABCAD\_SFEPY\_PYTHON} & Interpreter of the conda SfePy environment (\texttt{env/sfepy\_env.lock.yml}):
+sfepy, numpy~2, pyamg. Runs \emph{all} FEA. Invoke with \texttt{-u} (unbuffered progress). \\
+\texttt{ABCAD\_BLENDER} & Blender 5.x executable (EEVEE renderer), run headless. \\
+Ollama & Local model server with \texttt{qwen2.5-coder:7b} (4.7\,GB) and \texttt{qwen3-vl:8b} (6.1\,GB).
+\emph{Not} running by default; launched capped per \S\ref{sec:proc-backend}. \\
+Code emitter & Llama-3.2-3B-Instruct + LoRA on the Apple GPU (float16), $\sim$8--9\,GB class,
+subprocess-isolated (Phase~1 exits before Phase~2 loads any model). \\
+\texttt{ABCAD\_OUT} & Output root for every tool (default \texttt{./out}); never the package directory. \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Print processes and limits}\label{sec:limits}
+One set of process limits is shared by the in-loop manufacturability gate and the print audit
+(\texttt{abcad/printing/print\_audit.py}); the process is selected with \texttt{ABCAD\_PRINT\_PROCESS}
+(default \texttt{fdm}).
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Process & Min.\ feature / strand & Overhang gate & Build volume [mm] \\
+\midrule
+FDM, 0.4\,mm nozzle (\textbf{default}) & $\ge 0.8$\,mm & $\le 15\%$ area $>45^\circ$ & $220 \times 220 \times 250$ \\
+Resin SLA/DLP & $\ge 0.3$\,mm & n/a (supports) & $145 \times 145 \times 175$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Audit ladders: thickness diameters $\{0.3, 0.5, 0.8, 1.2\}$\,mm; clearance gaps $\{0.3, 0.5, 0.8\}$\,mm;
+a part ``forms at diameter $d$'' if the morphological opening at $d$ removes $\le 1\%$ of its material.
+
+\section{Safety and system protection (mandatory)}\label{sec:safety}
+The host is memory-constrained; an out-of-memory stall is the primary hazard (constraint C2).
+\begin{enumerate}[nosep]
+  \item \textbf{Pre-flight memory baseline before ANY heavy step} (code emitter, Ollama-backed loop, FEA
+        above a few thousand hexahedra, MOOSE): close large applications and release inactive memory
+        (on macOS, \texttt{sudo purge}); confirm that swap usage is near its baseline.
+  \item \textbf{Watchdog on every heavy step} (Appendix~\ref{app:watchdog}). It samples swap usage and
+        child-process memory every 2\,s and terminates the process group on a threshold breach or time
+        cap. Reference thresholds: 3072--3584\,MB of swap for renders, FEA, and audits;
+        4096--5120\,MB for the code emitter and the Ollama loop; time caps 6--45\,min by step.
+  \item \textbf{Ollama caps}: \texttt{OLLAMA\_MAX\_LOADED\_MODELS=1}, \texttt{OLLAMA\_NUM\_PARALLEL=1},
+        short keep-alive (2\,min). Never allow two large models to be resident at once; respect the
+        two-phase design (the generation child exits before critic models load).
+  \item \textbf{FEA mesh cap}: with the direct solver, $\le$\,15--20\,k hexahedra for the nonlinear
+        solver (a 35\,k-hex run exceeded 39\,min and was terminated). Reference: 17{,}685 hex
+        $\approx$ 1.65\,GB resident, $\sim$1\,min. Larger linear meshes use
+        \texttt{ABCAD\_FEA\_SOLVER=amg} (63{,}334 hex in 60\,s).
+  \item \textbf{Abort posture}: on any watchdog trip, treat the run as failed (\S\ref{sec:nonconf});
+        never retry without re-establishing the memory baseline.
+\end{enumerate}
+
+% =====================================================================================
+\section{Procedure}\label{sec:proc}
+Stages \ref{sec:proc-preflight}--\ref{sec:proc-records} constitute one controlled run. Do not skip
+gates; record outcomes per \S\ref{sec:proc-records}. In the listings, \texttt{<watchdog>} stands for
+the memory watchdog of Appendix~\ref{app:watchdog} and \texttt{<agent>} for the command-line entry
+point of the design loop documented in \texttt{abcad/agent/}.
+
+\subsection{Stage 1 --- Pre-flight verification (memory-light)}\label{sec:proc-preflight}
+\begin{lstlisting}
+# baseline memory picture (record swap 'used' in the run log)
+sysctl -n vm.swapusage ; vm_stat | head -6
+
+# logic verification WITHOUT Blender or models
+python -m pytest -q -m "not slow"
+\end{lstlisting}
+\acc{All fast tests pass. Swap usage at or near its post-purge baseline ($\lesssim 1.5$\,GB) before
+proceeding to any heavy stage; otherwise establish the baseline first (\S\ref{sec:safety}).}
+
+\subsection{Stage 2 --- Backend startup}\label{sec:proc-backend}
+\begin{lstlisting}
+OLLAMA_MAX_LOADED_MODELS=1 OLLAMA_NUM_PARALLEL=1 OLLAMA_KEEP_ALIVE=2m \
+OLLAMA_CONTEXT_LENGTH=8192 \
+  ollama serve &          # capped local model server, 8k context
+ollama list               # verify the models are present
+\end{lstlisting}
+\acc{\texttt{ollama list} shows \texttt{qwen2.5-coder:7b} and \texttt{qwen3-vl:8b}. The daemon idles
+(no model loaded) until the loop calls it. \textbf{\texttt{OLLAMA\_CONTEXT\_LENGTH=8192} is mandatory}:
+the critic prompt is $\sim$3.5\,k tokens and the critic model's chat template enables thinking; at the
+default 4096-token context the verdict is truncated or lost.}
+
+\subsection{Stage 3 --- Generation and the render/critique/repair loop}\label{sec:proc-loop}
+Full end-to-end run (Phase-1 code emitter child process $\rightarrow$ Phase-2 loop), under the watchdog:
+\begin{lstlisting}
+<watchdog> 5120 2700 run_swap.log -- <agent> "a woven cubic lattice metamaterial"
+\end{lstlisting}
+Reproducible loop testing and regression (injects saved code and skips the stochastic generator):
+\begin{lstlisting}
+<watchdog> 5120 2700 run_swap.log -- <agent> --use-code saved_code.py "a woven cubic lattice metamaterial"
+\end{lstlisting}
+Expected controlled behavior:
+\begin{itemize}[nosep]
+  \item A failed initial render routes directly to the code fixer (no critic call on a missing image).
+  \item Code fixer: $\le 3$ attempts; each log line shows the error under repair; verbatim repeats are
+        detected \emph{before} rendering and escalate the sampling temperature $0.1 \rightarrow 0.5
+        \rightarrow 0.8$ with an explicit restructure demand; a repeat at maximum temperature fails fast.
+        Reference performance: a structural mesh/curve API error repaired in 2 attempts (reproduced
+        $3\times$).
+  \item Critic: the verdict JSON is printed (\texttt{match\_quality}, \texttt{physical\_stability},
+        comment); a failed critique retries once and is marked \texttt{VLM CRITIQUE FAILED} --- it must
+        not be treated as a design critique, and the run ends rather than designing on it.
+  \item Code designer: parameter-level changes only; a designer edit that breaks execution routes to
+        the code fixer (never crashes the graph); verbatim-repeat designs trip the stall guard and end
+        the run.
+  \item Manufacturability gate: process from \texttt{ABCAD\_PRINT\_PROCESS} (default \texttt{fdm}),
+        gating on the world bounding box and the $45^\circ$/15\% overhang rule from the render-time
+        mesh statistics. After approval, the full print audit runs once on the exported STL (deep gate);
+        a thin-feature-only failure is repaired deterministically by uniform scaling with the computed
+        factor $k$, and the scaled variant is re-audited.
+  \item Every successful render exports the scene geometry to STL; the terminal record is
+        \texttt{run\_manifest.json} (prompt, verdicts, artifact paths including scaled variants,
+        counters).
+\end{itemize}
+\acc{Run terminates without crash; \texttt{blender\_status=success}; critic \texttt{approve=true} with
+\texttt{match\_quality=good} and \texttt{physical\_stability=stable}; manufacturability
+\texttt{printable=true}, \emph{or} a PRINT-certified auto-scaled variant recorded in the manifest. Any
+other terminal state $\rightarrow$ \S\ref{sec:nonconf}.}
+
+\subsection{Stage 4 --- Geometry export}\label{sec:proc-export}
+The loop exports the geometry of every successful render; the manifest records the approved STL
+(\texttt{stl\_path}) and any scaled variant (\texttt{stl\_path\_scaled}). Deterministic generator
+families produce STL natively (\texttt{docs/GENERATORS.md}). Fallback for a saved script:
+\begin{lstlisting}
+"$ABCAD_BLENDER" -b --python-expr "import bpy
+exec(open('generated.py').read())
+try: bpy.ops.wm.stl_export(filepath='part.stl')
+except Exception: bpy.ops.export_mesh.stl(filepath='part.stl')"
+\end{lstlisting}
+\acc{STL written; the next stage's audit (not this step) is the arbiter of its quality.}
+
+\subsection{Stage 5 --- Quantitative print audit}\label{sec:proc-audit}
+\begin{lstlisting}
+<watchdog> 3584 1800 audit_swap.log -- \
+  "$ABCAD_CAD_PYTHON" -u -m abcad.printing.print_audit \
+  --stl part.stl            # add --voxel 0.15 to certify a chosen print candidate
+\end{lstlisting}
+The audit measures: watertight/manifold; bounding box, solid volume, resin-equivalent mass; bed-aware
+$45^\circ$ overhang fraction; EDT wall-thickness ladder (maximum certified diameter; lost-material
+fraction per rung); near-structure clearance / fiber-fusion ladder; enclosed voids (trapped resin);
+per-process verdicts with concrete fixes (supports, drain holes, scale factor). Reports land in
+\texttt{\$ABCAD\_OUT/print\_audit/}.
+\acc{For the default FDM process: watertight = manifold = true; lost-material fraction at 0.8\,mm
+$\le 1\%$; overhang $\le 15\%$ \emph{or} an explicit supports plan; bounding box within
+$220\times220\times250$\,mm. Trust floor: thickness statements are valid down to $\sim$2 voxels at the
+reported voxel size --- re-run with \texttt{-{}-voxel 0.15} before committing a print.}
+
+\subsection{Stage 6 --- FDM variant preparation (when Stage 5 fails on thin features)}\label{sec:proc-variants}
+Uniform scaling preserves the architecture exactly; $E_\mathrm{eff}/E$ is scale-invariant, so prior FEA
+on the original remains valid for the scaled part. Scale factor rule: $k \ge d_\mathrm{limit} /
+d_\mathrm{certified}$ (from the Stage-5 report), rounded up to 0.1.
+\begin{lstlisting}
+"$ABCAD_CAD_PYTHON" -m abcad.printing.fdm_variants \
+  --stl part.stl --scales 1.5,2.0 --plate 2.0 --overlap 0.8
+\end{lstlisting}
+\texttt{-{}-plate} additionally emits a plated tension specimen (grip plates as overlapping closed
+shells, FEA plating convention: plate thickness and bonded overlap given at $\times 1$ scale and scaled
+with the part; slicers union the shells). Open-tube lattices that fail the watertight check are
+remeshed as solids with \texttt{abcad.printing.remesh\_watertight}.
+\acc{Re-run Stage 5 on every variant. Reference certification (29\,mm woven specimen):
+$\times 1.5$ = FDM PRINT (marginal, 0.99\% $<$ 0.8\,mm); $\times 2.0$ = FDM PRINT (clean, 0.50\%);
+$\times 2.0$ plated = FDM PRINT with fixes (top-plate underside, 16.7\% overhang).}
+
+\subsection{Stage 7 --- Mechanical verification by FEA (optional, per design intent)}\label{sec:proc-fea}
+\begin{lstlisting}
+# mesh: STL -> plated voxel-hex (+ A0/H0 sidecar); keep <= ~15-20k hex for the direct solver
+"$ABCAD_CAD_PYTHON" -m abcad.fea.voxel_plate_mesh \
+  --stl part.stl --voxel 1.0 --plate 2.0 --overlap 0.8 --msh part.msh --no_render
+
+# linear reference (trusted): E_eff   (ABCAD_FEA_SOLVER=amg for large meshes)
+"$ABCAD_SFEPY_PYTHON" -u abcad/fea/run_tension.py --msh part.msh
+
+# finite strain (neo-Hookean total-Lagrangian, strain control)
+"$ABCAD_SFEPY_PYTHON" -u -m abcad.fea.run_tension_finite --msh part.msh
+
+# solver self-check whenever run_tension_finite is modified
+"$ABCAD_SFEPY_PYTHON" -u -m abcad.fea.run_tension_finite --block 10,10,20,5,5,9
+\end{lstlisting}
+\acc{Block validation recovers the solid modulus within $\sim$5\% (reference: 3080.8\,MPa = 102.7\% of
+$E = 3000$\,MPa, concave neo-Hookean response). Lattice finite-strain $E_\mathrm{eff}$ agrees with the
+linear reference on the same mesh to within a few percent at small strain (reference, 17{,}685-hex
+woven mesh: 93.1 vs 91.8\,MPa, $+1.4\%$; interior residual $\sim 10^{-7}$\,N). Never trust an FEA
+conclusion that fails to recover the linear reference.}
+
+\subsection{Stage 8 --- Slicing and printing}\label{sec:proc-print}
+\begin{itemize}[nosep]
+  \item Orientation: as modeled ($+z$ up) unless the Stage-5 report says otherwise; the audit's overhang
+        number applies to that orientation only.
+  \item Reference defaults (FDM, 0.4\,mm nozzle): 0.2\,mm layers; brim on (lattice feet are small stubs);
+        100\% infill for specimens compared with FEA; supports per the audit verdict (bare woven
+        lattice at $\times 2.0$: none; plated specimen: bridging or supports under the top plate); part
+        cooling high at fiber crossings.
+  \item Slice, review the preview layer by layer at the first fiber-crossing height, print.
+\end{itemize}
+\acc{Physical QC of the printed part: mass within $\pm 15\%$ of the audit's volume $\times$ material
+density (sliced solid fibers); overall bounding box within $\pm 0.5$\,mm of the STL; no fused-solid
+regions where the clearance ladder predicted open gaps; fibers continuous (no missing strands).}
+
+\subsection{Stage 9 --- Records and closeout}\label{sec:proc-records}
+Record in the run log: prompt, run folder, per-stage outcomes with their numbers, memory peaks from the
+watchdog logs, deviations and dispositions. Artifacts retained: run folder (renders, generated code,
+\texttt{run\_manifest.json}), print-audit reports, exported and variant STLs, FEA JSON/CSV, sliced
+project file. Records that back published numbers are archived under \texttt{results/}.
+\acc{The run log allows a third party to reconstruct the run and its evidence without any other
+source.}
+
+% =====================================================================================
+\section{Quality-control summary (all gates at a glance)}
+\begin{longtable}{@{}p{3.1cm}p{4.4cm}p{4.2cm}p{3.0cm}@{}}
+\toprule
+Gate & Criterion & Method & Record \\
+\midrule
+Logic & fast test suite passes & Blender-free tests & run log \\
+Memory baseline & swap used $\lesssim 1.5$\,GB before heavy steps & \texttt{sysctl vm.swapusage} & run log \\
+Runtime safety & no watchdog trip (swap $<$ threshold; within time cap) & watchdog log & \texttt{*\_swap.log} \\
+Render & validation success; mesh statistics parsed & headless Blender validation & run folder \\
+Critique & critic \texttt{approve=true} (good + stable) & \texttt{qwen3-vl} vs references & manifest \\
+Gate (in loop) & bbox within bed; overhang $\le 15\%$ (FDM) & manufacturability gate & manifest \\
+Geometry & watertight; manifold & print audit surface checks & audit CSV/MD \\
+Thickness & lost fraction at process limit $\le 1\%$ & EDT morphological opening & audit CSV/MD \\
+Clearance & fusion-risk fractions reviewed; enclosed voids dispositioned & EDT of the void phase & audit CSV/MD \\
+FEA (optional) & finite $\approx$ linear at small strain; block $\approx E$ & \S\ref{sec:proc-fea} & FEA JSON/CSV \\
+Physical part & mass $\pm 15\%$; bbox $\pm 0.5$\,mm; gaps open; strands continuous & bench check & run log \\
+\bottomrule
+\end{longtable}
+
+% =====================================================================================
+\section{Nonconformance, deviations, and troubleshooting}\label{sec:nonconf}
+On any acceptance-criteria failure: STOP the stage, record the failure verbatim in the run log,
+disposition per the matrix below, and only then re-run. Deviations from this SOP require Operator
+approval recorded in the run log.
+
+\begin{longtable}{@{}p{4.6cm}p{4.6cm}p{5.2cm}@{}}
+\toprule
+Symptom & Likely cause & Disposition \\
+\midrule
+Watchdog trip (exit 97/98) & memory pressure or a runaway solve & Re-establish the memory baseline
+(\S\ref{sec:safety}); reduce the mesh or defer; never retry immediately. \\
+Code fixer exhausts attempts & a structural error the model cannot restructure & Inspect the saved fix
+attempts; if they are byte-identical the stall guard is not engaging --- file a defect; otherwise
+re-run with a refined prompt or repair manually. \\
+\texttt{VLM CRITIQUE FAILED} (both tries) & truncated or non-JSON output (context or token budget too
+small) & Check the error's raw-output snippet; verify Ollama health, the 8192-token context, and
+reference-image sizes; do NOT treat designer output from such a run as a valid iteration. \\
+Critic rejects a visibly correct render & missing or wrong reference grounding for the family & Verify
+retrieval routing for the family (woven and Bouligand references rank first for their prompts); extend
+the image corpus additively. \\
+Designer iterations churn without geometry change & critique not actionable, or cosmetic edits & If
+renders are pixel-identical across iterations, end the run (stall) and review the critique text being
+fed forward. \\
+Audit: thin-feature failure & fibers below the process limit (as-designed demonstrators: 1.5--98\% of
+material $<$ 0.8\,mm) & Stage 6 uniform scaling ($k \ge d_\mathrm{limit}/d_\mathrm{certified}$);
+re-certify. \\
+Audit: enclosed voids (resin) & closed pockets (micro-pockets at fiber weld lines) & For FDM: no
+action. For resin: add drain holes or reorient; micro-pockets $\le 0.01$\,mL may be accepted with
+justification. \\
+FEA lattice/linear mismatch & mesh too coarse, plates not bonded (check \texttt{-{}-overlap}), or a
+real regression & Verify the sidecar $A_0/H_0$; re-run the block validation; if the block fails, bisect
+the last solver change. Do not change a solver to fix a suspected defect without first reproducing it:
+a suspected reaction-extraction defect in the finite-strain solver was refuted by full-resolution
+cross-checks against the linear reference. \\
+\bottomrule
+\end{longtable}
+
+% =====================================================================================
+\appendix
+\section{Command quick reference}
+\begin{lstlisting}
+# memory snapshot                  sysctl -n vm.swapusage ; vm_stat | head -6
+# fast tests                       python -m pytest -q -m "not slow"
+# capped Ollama                    OLLAMA_MAX_LOADED_MODELS=1 OLLAMA_NUM_PARALLEL=1 OLLAMA_CONTEXT_LENGTH=8192 ollama serve
+# full loop (watchdogged)          <watchdog> 5120 2700 log -- <agent> "<prompt>"
+# reproducible loop test           <watchdog> ... -- <agent> --use-code saved_code.py "<prompt>"
+# print audit (one part)           "$ABCAD_CAD_PYTHON" -m abcad.printing.print_audit --stl X.stl [--voxel 0.15]
+# FDM variants (+plated specimen)  "$ABCAD_CAD_PYTHON" -m abcad.printing.fdm_variants --stl X.stl --scales 1.5,2.0 --plate 2.0 --overlap 0.8
+# FEA linear reference             "$ABCAD_SFEPY_PYTHON" -u abcad/fea/run_tension.py --msh X.msh
+# FEA finite strain + self-check   "$ABCAD_SFEPY_PYTHON" -u -m abcad.fea.run_tension_finite --msh X.msh | --block 10,10,20,5,5,9
+\end{lstlisting}
+The repository's \texttt{justfile} wraps these commands (\texttt{just --list}).
+
+\section{The memory watchdog}\label{app:watchdog}
+\texttt{<watchdog> THRESH\_MB MAX\_SECONDS LOGFILE -{}- cmd [args...]} runs \texttt{cmd} in its own
+process group, samples swap `used' and child-tree resident memory every 2\,s, appends each sample to
+LOGFILE, and kills the whole group if swap exceeds the threshold (abort before the host stalls) or the
+time cap elapses (exit 97 / 98 respectively; the child's own exit code otherwise). The watchdog is a
+small host-side shell script and is intentionally not part of the package: thresholds are chosen per
+host and per step.
+
+\section{Reference results anchoring this SOP's acceptance values}\label{app:reference}
+\begin{itemize}[nosep]
+  \item Finite-strain reaction validation: $E_\mathrm{eff} = 93.1$\,MPa vs linear 91.8\,MPa ($+1.4\%$)
+        on the 17{,}685-hex woven mesh; reaction identical to an independent assembly without essential
+        boundary conditions; interior residual $7\times10^{-7}$\,N. Block: 3080.8\,MPa (102.7\%).
+  \item Loop: structural repair in $\le 2$ code-fixer attempts, reproduced $3\times$; crash-free end to
+        end; worst swap peak 1511\,MB against a 5120\,MB threshold over five instrumented runs.
+        A complete run (repair $\rightarrow$ approval $\rightarrow$ deep-gate thin-feature failure
+        $\rightarrow$ $\times 1.6$ auto-scale $\rightarrow$ PRINT) is archived in
+        \texttt{results/agent\_runs/}.
+  \item Fleet audit: 10/10 demonstrator parts watertight and manifold; resin-printable 10/10 (2 with
+        minor fixes); FDM-printable as designed 0/10 (thin features).
+  \item Certified FDM variants of the 29\,mm woven specimen: $\times 2.0$ clean pass (support-free,
+        58.2\,mm, 31.1\,mL); $\times 2.0$ plated specimen printable with top-plate supports or bridging;
+        release candidate $\times 2.0$ remeshed: PRINT, lost@0.8\,mm = 0.17\%, zero enclosed voids.
+\end{itemize}
+
+\end{document}

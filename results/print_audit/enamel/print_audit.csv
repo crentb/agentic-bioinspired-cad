@@ -1,0 +1,2 @@
+file,bbox_x_mm,bbox_y_mm,bbox_z_mm,volume_ml,resin_mass_g,watertight,manifold,overhang_area_frac,voxel_mm,max_formable_d_mm,max_inscribed_diam_mm,enclosed_void_count,enclosed_void_ml,lost_frac_d0.3,lost_frac_d0.5,lost_frac_d0.8,lost_frac_d1.2,gap_frac_g0.3,gap_frac_g0.5,gap_frac_g0.8,verdict_fdm
+enamel_linear_x4.stl,25.95,26.0,21.06,7.197,7.9,False,False,0.0685,0.12,,1.93,28,0.0,0.0427,0.0973,0.1983,0.3175,0.1978,0.3855,0.5979,SCALE/REDESIGN

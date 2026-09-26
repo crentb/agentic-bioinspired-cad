@@ -1,0 +1,37 @@
+# Dependabot: automated dependency-update PRs for the three ecosystems this
+# repository ships from. Every PR still has to pass the full CI gate (quality,
+# gitleaks, bandit, pip-audit, trivy), so Dependabot proposes and CI disposes:
+# the notice -> bump -> verify -> PR chase is automated without weakening a gate.
+version: 2
+updates:
+  # Python dependencies (pyproject.toml): the supply chain the package imports
+  # at run time and in development.
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      # One PR for the pinned dev tools, so ruff/black/mypy move together and
+      # the pre-commit revs can be bumped in the same review.
+      dev-tools:
+        patterns: ["ruff", "black", "mypy", "pytest*", "pre-commit"]
+
+  # Base image in the Dockerfile: OS-level CVEs surface here first; a bumped
+  # tag is exactly what clears trivy findings once upstream fixes ship.
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+
+  # The Actions used by .github/workflows. They are pinned to full commit SHAs
+  # (with the release tag in a trailing comment); Dependabot bumps both.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]

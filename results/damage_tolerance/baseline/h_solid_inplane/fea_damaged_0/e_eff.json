@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.6375000000000001,
+  "A0_mm2": 412.5,
+  "H0_mm": 63.75,
+  "reaction_force_N": 3874.2951398600308,
+  "nominal_stress_MPa": 9.392230642084924,
+  "avg_sigma_zz_MPa": 12.96804363942214,
+  "avg_von_mises_MPa": 14.189982674423181,
+  "E_eff_MPa": 939.2230642084924,
+  "E_eff_fraction_of_solid": 0.31307435473616413,
+  "mesh": "out/damage_tolerance/h_solid_inplane/damaged_0.msh"
+}

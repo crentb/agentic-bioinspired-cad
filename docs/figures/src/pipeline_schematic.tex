@@ -1,0 +1,304 @@
+%% ============================================================================
+%% pipeline_schematic.tex -- README overview figure, agentic-bioinspired-cad
+%%
+%% Purpose : two-row pipeline overview.
+%%           Top row, the design loop: natural-language prompt -> Phase-1 code
+%%           emitter (fine-tuned Llama-3.2-3B LoRA, subprocess-isolated) ->
+%%           headless Blender build and render -> vision-language critic with a
+%%           schema-constrained verdict -> print gate -> certified STL, with the
+%%           code-fixer / code-designer repair loop drawn as a return arrow.
+%%           Bottom row: the three generator families (deterministic builds and
+%%           code exemplars), the four verification instruments (TM-2 print
+%%           audit, voxel-hex FEA, TM-3 damage tolerance, TM-6 phase-field
+%%           fracture), and the output, a printed single-material part.
+%%           The footer states that the whole stack runs locally.
+%%           Same visual language as the sister figures (grey page, gold icon
+%%           rings, navy stage boxes, grey phase brackets) so the packages read
+%%           as a set.
+%% Build   : (from docs/figures/src/)
+%%           latexmk -pdf pipeline_schematic.tex
+%%           pdftoppm -png -r 200 -singlefile pipeline_schematic.pdf ../pipeline_overview
+%%           cp pipeline_schematic.pdf ../../pipeline_schematic.pdf
+%%           latexmk -C pipeline_schematic.tex
+%% Output  : a 26.6 cm x 17.6 cm vector PDF; at 200 dpi the PNG is ~2100 px wide.
+%%           GitHub shows it ~830-1000 px wide, so 15 pt box labels land near
+%%           15-18 px and 10 pt captions near 10-12 px on screen.
+%% Layout  : every element sits on fixed y-bands (labels, brackets, rings, boxes,
+%%           captions) and fixed x-centres per row, so no text can overlap an icon.
+%% ============================================================================
+\documentclass[tikz,border=0pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}                      % scalable tt/math fonts (no bitmap substitutions)
+\usepackage[scaled=0.95]{helvet}          % Helvetica metrics, like the sister figures
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[letterspace=80]{microtype}   % \textls: tracked capitals for phase labels
+\usetikzlibrary{arrows.meta,calc}
+\pdfinfo{/Title (agentic-bioinspired-cad: pipeline overview) /Author (Cameron B. Renteria)}
+
+% ---- palette (identical to the sister figures) ---------------------------------------------
+\definecolor{page}{HTML}{EEEEEE}    % page grey
+\definecolor{navy}{HTML}{1E3252}    % stage boxes, line icons, arrows
+\definecolor{gold}{HTML}{B8894A}    % icon rings, highlights, the repair loop
+\definecolor{ink}{HTML}{222222}     % caption text
+\definecolor{phase}{HTML}{6E6E6A}   % phase labels
+\definecolor{rule}{HTML}{8C8C8C}    % phase brackets
+\definecolor{tone}{HTML}{C9CED6}    % neutral fill inside icons
+\definecolor{sky}{HTML}{7F9BBF}     % mid tone for icon details
+
+% ---- reusable styles ----------------------------------------------------------------------
+\tikzset{
+  % top-row (design loop) stage boxes and rings
+  stage/.style  = {fill=navy, rounded corners=6pt, minimum width=3.6cm, minimum height=1.55cm,
+                   text=white, align=center, font=\fontsize{15}{17.5}\selectfont, inner sep=2pt},
+  ring/.style   = {draw=gold, line width=1.6pt, circle, minimum size=2.0cm},
+  % bottom-row (families, instruments, output) boxes and rings: one size smaller
+  stageS/.style = {fill=navy, rounded corners=5pt, minimum width=2.7cm, minimum height=1.35cm,
+                   text=white, align=center, font=\fontsize{12.5}{14.5}\selectfont, inner sep=2pt},
+  ringS/.style  = {draw=gold, line width=1.4pt, circle, minimum size=1.6cm},
+  capt/.style   = {text=ink, align=center, anchor=north, text width=3.9cm,
+                   font=\fontsize{10.5}{12.8}\selectfont},
+  captS/.style  = {text=ink, align=center, anchor=north, text width=2.8cm,
+                   font=\fontsize{9.5}{11.6}\selectfont},
+  flow/.style   = {-{Stealth[length=7pt,width=6.5pt]}, line width=1.4pt, draw=navy},
+  gflow/.style  = {-{Stealth[length=7pt,width=6.5pt]}, line width=1.3pt, draw=gold,
+                   dash pattern=on 4pt off 2.5pt},
+  ico/.style    = {draw=navy, line width=1.1pt},
+  phaselbl/.style = {text=phase, font=\fontsize{11.5}{13.5}\selectfont},
+  note/.style   = {text=gold, font=\itshape\fontsize{10}{12}\selectfont},
+}
+% Gold, bold tag opening a caption (the sister figures' convention for key qualifiers).
+\newcommand{\ctag}[1]{\textcolor{gold}{\bfseries\fontsize{9.5}{11.5}\selectfont #1}}
+% Phase bracket at height #4: grey rule with short down-ticks from x=#1 to x=#2; label #3
+% centred above (top row).
+\newcommand{\phasebracket}[4]{%
+  \draw[rule, line width=1pt] (#1,#4-0.25) -- (#1,#4) -- (#2,#4) -- (#2,#4-0.25);
+  \node[phaselbl] at ({(#1+#2)/2},#4+0.5) {\textls{#3}};}
+% Same bracket with the label left-aligned at its start (bottom row, leaves room for arrows).
+\newcommand{\phasebracketL}[4]{%
+  \draw[rule, line width=1pt] (#1,#4-0.25) -- (#1,#4) -- (#2,#4) -- (#2,#4-0.25);
+  \node[phaselbl, anchor=west] at (#1-0.05,#4+0.5) {\textls{#3}};}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+
+% ---- page -------------------------------------------------------------------------------
+\fill[page] (0,0) rectangle (26.6,17.6);
+
+% ---- fixed bands --------------------------------------------------------------------------
+%  top row    : x-centres 2.55 | 6.85 | 11.15 | 15.45 | 19.75 | 24.05  (pitch 4.3 cm)
+%  bottom row : families 1.9 | 4.9 | 7.9, instruments 11.7 | 14.7 | 17.7 | 20.7, output 24.05
+\def\yBrT{16.35}   % top brackets (rule height)
+\def\yRingT{14.2}  % top ring centres    (ring spans 13.2-15.2)
+\def\yBoxT{11.95}  % top box centres     (box spans 11.175-12.725)
+\def\yCapT{10.95}  % top caption tops
+\def\yBrB{8.2}     % bottom brackets
+\def\yRingB{6.8}   % bottom ring centres (ring spans 6.0-7.6)
+\def\yBoxB{4.95}   % bottom box centres  (box spans 4.275-5.625)
+\def\yCapB{4.1}    % bottom caption tops
+
+% ==== TOP ROW: the design loop =============================================================
+\phasebracket{0.75}{4.35}{INPUT}{\yBrT}
+\phasebracket{5.05}{8.65}{GENERATE}{\yBrT}
+\phasebracket{9.35}{17.25}{RENDER\,·\,CRITIQUE\,·\,REPAIR}{\yBrT}
+\phasebracket{17.95}{21.55}{GATE}{\yBrT}
+\phasebracket{22.25}{25.85}{OUTPUT}{\yBrT}
+
+\foreach \x in {2.55,6.85,11.15,15.45,19.75,24.05} \node[ring] at (\x,\yRingT) {};
+
+% Icon 1 -- prompt: a speech bubble holding three lines of text.
+\begin{scope}[shift={(2.55,\yRingT)}]
+  \draw[ico, fill=white, rounded corners=3pt] (-0.62,-0.30) rectangle (0.62,0.46);
+  \draw[ico, fill=white] (-0.30,-0.29) -- (-0.44,-0.56) -- (-0.08,-0.29);
+  \fill[white] (-0.285,-0.31) rectangle (-0.095,-0.26);        % hide the joint seam
+  \foreach \y/\w in {0.26/0.90, 0.08/0.70, -0.10/0.80}
+    \draw[navy!70, line width=1.3pt, line cap=round] (-0.45,\y) -- ++(\w,0);
+\end{scope}
+
+% Icon 2 -- code emitter: a code page with angle brackets and a slash.
+\begin{scope}[shift={(6.85,\yRingT)}]
+  \draw[ico, fill=white] (-0.50,-0.58) rectangle (0.50,0.58);
+  \draw[navy, line width=1.6pt, line cap=round, line join=round] (-0.12,0.24) -- (-0.32,0.04) -- (-0.12,-0.16);
+  \draw[navy, line width=1.6pt, line cap=round, line join=round] (0.12,0.24) -- (0.32,0.04) -- (0.12,-0.16);
+  \draw[gold, line width=1.6pt, line cap=round] (0.06,0.30) -- (-0.06,-0.22);
+  \draw[navy!60, line width=1.1pt, line cap=round] (-0.32,-0.38) -- (0.30,-0.38);
+\end{scope}
+
+% Icon 3 -- build + render: an isometric wireframe cube (the rendered geometry).
+\begin{scope}[shift={(11.15,\yRingT)}]
+  \coordinate (a) at (-0.42,-0.42); \coordinate (b) at (0.28,-0.42);
+  \coordinate (c) at (0.28,0.28);   \coordinate (d) at (-0.42,0.28);
+  \coordinate (e) at (-0.18,-0.20); \coordinate (f) at (0.52,-0.20);
+  \coordinate (g) at (0.52,0.50);   \coordinate (h) at (-0.18,0.50);
+  \draw[navy!45, line width=0.9pt] (e) -- (f) (e) -- (h) (e) -- (a);
+  \draw[ico, fill=tone, fill opacity=0.35] (a) -- (b) -- (c) -- (d) -- cycle;
+  \draw[ico] (b) -- (f) -- (g) -- (c) (d) -- (h) -- (g);
+\end{scope}
+
+% Icon 4 -- vision-language critic: an eye; gold iris.
+\begin{scope}[shift={(15.45,\yRingT)}]
+  \draw[ico, fill=white] (-0.64,0) .. controls (-0.30,0.44) and (0.30,0.44) .. (0.64,0)
+                                   .. controls (0.30,-0.44) and (-0.30,-0.44) .. (-0.64,0);
+  \fill[gold] (0,0) circle (0.22);
+  \fill[navy] (0,0) circle (0.10);
+\end{scope}
+
+% Icon 5 -- print gate: a nozzle depositing a strand on stacked layers, with a check.
+\begin{scope}[shift={(19.75,\yRingT)}]
+  \draw[ico, fill=tone] (-0.20,0.52) -- (0.20,0.52) -- (0.20,0.26) -- (0.06,0.08) -- (-0.06,0.08) -- (-0.20,0.26) -- cycle;
+  \foreach \y in {-0.10,-0.28,-0.46}
+    \draw[navy!70, line width=2.2pt, line cap=round] (-0.52,\y) -- (0.52,\y);
+  \draw[gold, line width=1.8pt, line cap=round, line join=round] (0.30,0.30) -- (0.40,0.18) -- (0.60,0.44);
+\end{scope}
+
+% Icon 6 -- certified STL: a triangulated facet sheet with a gold check badge.
+\begin{scope}[shift={(24.05,\yRingT)}]
+  \draw[ico, fill=white] (-0.55,-0.45) -- (0.35,-0.45) -- (0.35,0.45) -- (-0.55,0.45) -- cycle;
+  \draw[navy!60, line width=0.9pt] (-0.55,-0.45) -- (0.35,0.45) (-0.55,0.0) -- (-0.10,0.45)
+                                   (-0.10,-0.45) -- (0.35,0.0) (-0.55,0.0) -- (-0.10,-0.45)
+                                   (-0.10,0.45) -- (0.35,0.0);
+  \filldraw[gold, draw=page, line width=1pt] (0.36,-0.34) circle (0.22);
+  \draw[white, line width=1.5pt, line cap=round, line join=round] (0.26,-0.34) -- (0.34,-0.43) -- (0.47,-0.24);
+\end{scope}
+
+% Stage boxes.
+\node[stage] (pr) at (2.55,\yBoxT)  {Design\\prompt};
+\node[stage] (em) at (6.85,\yBoxT)  {Code\\emitter};
+\node[stage] (bd) at (11.15,\yBoxT) {Build +\\render};
+\node[stage] (cr) at (15.45,\yBoxT) {VLM\\critic};
+\node[stage] (gt) at (19.75,\yBoxT) {Print\\gate};
+\node[stage] (st) at (24.05,\yBoxT) {Certified\\STL};
+
+\draw[flow] (pr.east) -- (em.west);
+\draw[flow] (em.east) -- (bd.west);
+\draw[flow] (bd.east) -- (cr.west);
+\draw[flow] (cr.east) -- (gt.west);
+\draw[flow] (gt.east) -- (st.west);
+
+% The repair loop: from the critic back to the build stage, above the rings.
+\draw[gflow] (15.45,15.2) -- (15.45,15.65) -- (11.15,15.65) -- (11.15,15.23);
+\node[note, anchor=south] at (13.3,15.67) {code fixer\,·\,code designer: repair and refine};
+
+% Captions.
+\node[capt] at (2.55,\yCapT)  {natural language, e.g.\\``a woven cubic lattice\\metamaterial''};
+\node[capt] at (6.85,\yCapT)  {\ctag{PHASE 1}\\fine-tuned Llama-3.2-3B\\LoRA, isolated process};
+\node[capt] at (11.15,\yCapT) {\ctag{PHASE 2}\\headless Blender:\\mesh stats, PNG, STL};
+\node[capt] at (15.45,\yCapT) {\ctag{SCHEMA-CONSTRAINED}\\verdict against retrieved\\reference renders};
+\node[capt] at (19.75,\yCapT) {\ctag{TM-2}\\bbox, 45° overhang,\\thickness; scale ×\textit{k}};
+\node[capt] at (24.05,\yCapT) {\ctag{PRINT VERDICT}\\STL + run manifest};
+
+% ==== BOTTOM ROW: generator families, verification instruments, printed part ===============
+\phasebracketL{0.55}{9.25}{GENERATOR FAMILIES}{\yBrB}
+\phasebracketL{10.35}{22.05}{VERIFICATION INSTRUMENTS}{\yBrB}
+
+\foreach \x in {1.9,4.9,7.9,11.7,14.7,17.7,20.7,24.05} \node[ringS] at (\x,\yRingB) {};
+
+% Icon G1 -- helicoidal: three plies seen edge-on; the fiber hatch rotates from ply to ply,
+% and a gold arc marks the ply-to-ply twist.
+\begin{scope}[shift={(1.9,\yRingB)}]
+  \foreach \k/\ang in {0/90, 1/55, 2/20} {
+    \begin{scope}
+      \clip (-0.42,{-0.40+\k*0.28}) rectangle (0.34,{-0.18+\k*0.28});
+      \foreach \t in {-0.9,-0.75,...,0.9}
+        \draw[navy!65, line width=0.8pt] ({\t},{-0.29+\k*0.28}) -- ++(\ang:0.5) ++(\ang:-1.0) -- ++(\ang:0.5);
+    \end{scope}
+    \draw[ico] (-0.42,{-0.40+\k*0.28}) rectangle (0.34,{-0.18+\k*0.28}); }
+  \draw[gold, line width=1.3pt, -{Stealth[length=3.5pt]}] (0.46,-0.24) arc (-60:60:0.24);
+\end{scope}
+
+% Icon G2 -- woven: two helical fibers winding around one another along a beam.
+\begin{scope}[shift={(4.9,\yRingB)}]
+  \draw[navy, line width=1.4pt, domain=-0.55:0.55, samples=60, smooth] plot (\x, {0.22*sin(470*\x)});
+  \draw[gold, line width=1.4pt, domain=-0.55:0.55, samples=60, smooth] plot (\x, {-0.22*sin(470*\x)});
+\end{scope}
+
+% Icon G3 -- enamel: close-packed rods on a hexagonal ring around a center rod.
+\begin{scope}[shift={(7.9,\yRingB)}]
+  \filldraw[navy, fill=gold] (0,0) circle (0.12);
+  \foreach \a in {0,60,...,300} \filldraw[navy, fill=white, line width=1pt] (\a:0.36) circle (0.12);
+\end{scope}
+
+% Icon V1 -- print audit: a wall with a thickness dimension arrow.
+\begin{scope}[shift={(11.7,\yRingB)}]
+  \fill[tone] (-0.18,-0.45) rectangle (0.18,0.45);
+  \draw[ico] (-0.18,-0.45) -- (-0.18,0.45) (0.18,-0.45) -- (0.18,0.45);
+  \draw[gold, line width=1.2pt, {Stealth[length=3.5pt]}-{Stealth[length=3.5pt]}] (-0.45,0) -- (0.45,0);
+\end{scope}
+
+% Icon V2 -- voxel-hex FEA: a small voxel grid between plates, pulled upward.
+\begin{scope}[shift={(14.7,\yRingB)}]
+  \foreach \i in {0,1,2} \foreach \j in {0,1} \draw[ico, fill=tone] ({-0.36+\i*0.24},{-0.28+\j*0.24}) rectangle ++(0.24,0.24);
+  \fill[navy] (-0.44,-0.40) rectangle (0.44,-0.30);
+  \fill[navy] (-0.44,0.22) rectangle (0.44,0.32);
+  \draw[gold, line width=1.3pt, -{Stealth[length=4pt]}] (0,0.34) -- (0,0.58);
+\end{scope}
+
+% Icon V3 -- damage tolerance: a node lattice with one member removed (dashed flaw).
+\begin{scope}[shift={(17.7,\yRingB)}]
+  \foreach \i in {0,1,2} {
+    \draw[navy!55, line width=0.8pt] ({-0.36+\i*0.36},-0.36) -- ({-0.36+\i*0.36},0.36);
+    \draw[navy!55, line width=0.8pt] (-0.36,{-0.36+\i*0.36}) -- (0.36,{-0.36+\i*0.36}); }
+  \fill[page] (0.05,-0.10) rectangle (0.31,0.10);                     % the severed member
+  \draw[gold, line width=1.1pt, dash pattern=on 2pt off 1.5pt] (0.18,0) circle (0.17);
+  \foreach \i in {0,1,2} \foreach \j in {0,1,2}
+    \filldraw[navy, fill=white, line width=0.8pt] ({-0.36+\i*0.36},{-0.36+\j*0.36}) circle (0.06);
+\end{scope}
+
+% Icon V4 -- phase-field fracture: a notched block with a deflecting crack.
+\begin{scope}[shift={(20.7,\yRingB)}]
+  \draw[ico, fill=white] (-0.48,-0.42) rectangle (0.48,0.42);
+  \draw[navy, line width=1.8pt, line cap=round] (-0.48,0) -- (-0.08,0);
+  \draw[gold, line width=1.5pt, line cap=round, line join=round]
+       (-0.08,0) -- (0.06,0.12) -- (0.14,0.02) -- (0.28,0.20) -- (0.40,0.30);
+\end{scope}
+
+% Icon O1 -- printed part: an isometric solid block with print layer lines.
+\begin{scope}[shift={(24.05,\yRingB)}]
+  \draw[ico, fill=tone] (-0.40,-0.30) -- (0.10,-0.46) -- (0.46,-0.24) -- (0.46,0.22) -- (0.10,0.04) -- (-0.40,0.20) -- cycle;
+  \draw[ico, fill=white] (-0.40,0.20) -- (0.10,0.04) -- (0.46,0.22) -- (-0.04,0.38) -- cycle;
+  \foreach \t in {0.25,0.5,0.75} {
+    \draw[navy!50, line width=0.6pt] ($(-0.40,-0.30)!\t!(-0.40,0.20)$) -- ($(0.10,-0.46)!\t!(0.10,0.04)$);
+    \draw[navy!50, line width=0.6pt] ($(0.10,-0.46)!\t!(0.10,0.04)$) -- ($(0.46,-0.24)!\t!(0.46,0.22)$); }
+  \draw[ico] (0.10,-0.46) -- (0.10,0.04);
+\end{scope}
+
+% Bottom-row boxes.
+\node[stageS] at (1.9,\yBoxB)   {Helicoidal\\Bouligand};
+\node[stageS] at (4.9,\yBoxB)   {Woven\\lattice};
+\node[stageS] at (7.9,\yBoxB)   {Enamel\\decussation};
+\node[stageS] at (11.7,\yBoxB)  {Print\\audit};
+\node[stageS] at (14.7,\yBoxB)  {Voxel-hex\\FEA};
+\node[stageS] at (17.7,\yBoxB)  {Damage\\tolerance};
+\node[stageS] at (20.7,\yBoxB)  {Phase-field\\fracture};
+\node[stageS] at (24.05,\yBoxB) {Printed\\part};
+
+% Bottom-row captions.
+\node[captS] at (1.9,\yCapB)   {7 rotation laws;\\grooves, gaps,\\or fiber plies};
+\node[captS] at (4.9,\yCapB)   {Tier 1: exact;\\Tier 2: compact,\\model-emittable};
+\node[captS] at (7.9,\yCapB)   {hexagonal rod\\rings; three\\twist laws};
+\node[captS] at (11.7,\yCapB)  {\ctag{TM-2}\\wall thickness,\\clearance, voids;\\FDM and resin};
+\node[captS] at (14.7,\yCapB)  {\ctag{SFEPY}\\linear \textit{E}\textsubscript{eff};\\finite strain};
+\node[captS] at (17.7,\yCapB)  {\ctag{TM-3}\\flaw-seeded\\stiffness\\retention};
+\node[captS] at (20.7,\yCapB)  {\ctag{TM-6\,·\,MOOSE}\\crack twisting,\\deflection,\\J-integral};
+\node[captS] at (24.05,\yCapB) {\ctag{ONE MATERIAL}\\function from\\geometry alone};
+
+% ==== connectors between the rows ==========================================================
+% Certified STL -> printed part (straight down the right column).
+\draw[flow] (24.05,9.72) -- (24.05,7.62);
+\node[note, anchor=west] at (24.18,8.95) {print};
+% Certified STL -> verification instruments (branch left, onto their bracket).
+\draw[flow] (24.05,9.30) -- (21.40,9.30) -- (21.40,8.25);
+\node[note, anchor=south] at (22.72,9.33) {verify};
+% Generator families -> code emitter: retrieval exemplars for the language model.
+\draw[gflow] (6.85,8.25) -- (6.85,9.55);
+\node[note, anchor=west] at (6.98,8.95) {code exemplars};
+% Generator families -> verification: deterministic STL builds bypass the loop.
+\draw[gflow] (9.30,8.2) -- (10.30,8.2);
+\node[note, anchor=south] at (9.80,8.26) {STL};
+
+% ---- footer ---------------------------------------------------------------------------------
+\node[text=navy, font=\fontsize{11.5}{14}\selectfont] at (13.3,1.05)
+  {\texttt{abcad}\quad\textperiodcentered\quad 100\,\% local: PyTorch code emitter, Ollama critic and repair models,
+   Blender, SfePy, MOOSE\quad\textperiodcentered\quad no cloud services};
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,23 @@
+name: Feature or research request
+description: Propose a new generator family, verification instrument, or loop capability.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What design or verification question does this answer? Cite the relevant literature where applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The change you have in mind, including parameters (with units) and how it would be verified.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How would we know it works? (e.g. a validation benchmark, an analytical solution, a printed coupon)

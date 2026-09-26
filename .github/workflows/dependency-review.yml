@@ -1,0 +1,47 @@
+# =============================================================================
+# Dependency review: blocks a pull request that INTRODUCES a known-vulnerable
+# dependency, before it merges (pip-audit in ci.yml audits the resolved
+# environment as a whole; this gate is the per-change, diff-aware check).
+#
+# Requires the dependency graph, which GitHub provides free for public
+# repositories, so the review is skipped (not failed) while private.
+# =============================================================================
+name: Dependency review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  visibility:
+    name: Repository visibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      public: ${{ steps.v.outputs.public }}
+    steps:
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          private=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.private')
+          if [ "${private}" = "false" ]; then echo "public=true" >> "$GITHUB_OUTPUT"; else echo "public=false" >> "$GITHUB_OUTPUT"; fi
+
+  review:
+    name: Review dependency changes
+    needs: visibility
+    if: needs.visibility.outputs.public == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # post the summary comment when the gate fails
+    steps:
+      - name: Dependency review — GATING on HIGH/CRITICAL
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure

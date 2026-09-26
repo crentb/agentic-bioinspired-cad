@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.23500000000000001,
+  "A0_mm2": 650.25,
+  "H0_mm": 23.5,
+  "reaction_force_N": 7169.436837774131,
+  "nominal_stress_MPa": 11.025662188041725,
+  "avg_sigma_zz_MPa": 19.98060722486755,
+  "avg_von_mises_MPa": 20.180395042388668,
+  "E_eff_MPa": 1102.5662188041724,
+  "E_eff_fraction_of_solid": 0.36752207293472416,
+  "mesh": "out/damage_tolerance_v05/enamel_accelerating/damaged_1.msh"
+}

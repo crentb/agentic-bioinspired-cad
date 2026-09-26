@@ -1,0 +1,11 @@
+embedder BAAI/bge-small-en-v1.5 @ 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a on cpu
+gallery | 'a woven cubic lattice metamaterial' | rank 0 | cos 0.934 | woven | abcad/data/rag/renders/woven_cubic_lattice.png
+gallery | 'a woven cubic lattice metamaterial' | rank 1 | cos 0.726 | helicoidal | abcad/data/rag/renders/bouligand_rotating_ply.png
+gallery | 'a double-twist helical Bouligand structure' | rank 0 | cos 0.842 | helicoidal | abcad/data/rag/renders/bouligand_rotating_ply.png
+gallery | 'a double-twist helical Bouligand structure' | rank 1 | cos 0.751 | woven | abcad/data/rag/renders/woven_cubic_lattice.png
+text    | 'Write Blender Python code for a a woven cubic lattice metamaterial' | rank 0 | cos 0.808 | woven | 'a woven cubic lattice metamaterial of entangled helical fibers'
+text    | 'Write Blender Python code for a a woven cubic lattice metamaterial' | rank 1 | cos 0.669 | helical | 'a double-twist helical Bouligand structure with two interleaved helico'
+text    | 'Write Blender Python code for a a woven cubic lattice metamaterial' | rank 2 | cos 0.623 | helical | 'a graded-pitch helical Bouligand structure, small angle at the base in'
+PASS: gallery top-1 for 'a woven cubic lattice metamaterial' is woven
+PASS: gallery top-1 for 'a double-twist helical Bouligand structure' is helicoidal
+PASS: text top-1 is the woven exemplar

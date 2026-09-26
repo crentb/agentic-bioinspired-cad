@@ -1,0 +1,284 @@
+{
+  "E2E-1": {
+    "exit_code": 0,
+    "chars": 1857,
+    "starts_import_bpy": true,
+    "parses": true,
+    "models_resident_during_emit": 0,
+    "peak_swap_delta_mb": 418,
+    "wall_s": 123,
+    "pass": true
+  },
+  "E2E-2": {
+    "exit_code": 0,
+    "completion_has_code": true,
+    "wall_s": 121,
+    "pass": true
+  },
+  "daemon": {
+    "requests": 28,
+    "truncated_nonzero": 0,
+    "largest_context_tokens": 4757
+  },
+  "E2E-3": {
+    "criteria": {
+      "1_terminal_valid": true,
+      "2_splines_then_repaired_le3": true,
+      "3_no_parse_failures_no_truncation": true,
+      "4_at_least_one_certified": true,
+      "4_certified_runs_consistent": true,
+      "6_fixture_bbox_and_overhang": true,
+      "7_swap_and_time": true
+    },
+    "runs": [
+      {
+        "label": "E2E-3_run1",
+        "ran": true,
+        "manifest": true,
+        "run": "2026-09-26_12-04-16",
+        "exit_code": 0,
+        "wall_s": 376,
+        "peak_swap_delta_mb": 56,
+        "terminal_reason": "certified",
+        "approved": true,
+        "ever_approved": true,
+        "fix_attempts_used": 3,
+        "iteration_count": 0,
+        "critique_failed": false,
+        "gate_runs": 1,
+        "critique_runs": 1,
+        "entry_origin": "use-code",
+        "initial_splines_error": true,
+        "certification_status": "autoscaled_print",
+        "deep_verdict": "SCALE/REDESIGN",
+        "lost_frac_0p8": 0.1345,
+        "max_formable_d_mm": 0.5,
+        "scaled": 1.6,
+        "scaled_verdict": "PRINT",
+        "scaled_max_formable_d_mm": 0.8,
+        "stl_path_scaled_exists": true,
+        "fixture_bbox_mm": [
+          90.6,
+          90.6,
+          90.597
+        ],
+        "fixture_overhang": 0.1392,
+        "size_normalization": null,
+        "deep_stl": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-04-16/geom_fix_run_2.stl",
+        "stl_path": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-04-16/geom_fix_run_2.stl",
+        "verdicts": [
+          "approve=true match=good stability=stable comment=\"The candidate accurately depic"
+        ],
+        "phase1_before_phase2": null
+      },
+      {
+        "label": "E2E-3_run2",
+        "ran": true,
+        "manifest": true,
+        "run": "2026-09-26_12-10-52",
+        "exit_code": 0,
+        "wall_s": 304,
+        "peak_swap_delta_mb": 0,
+        "terminal_reason": "certified",
+        "approved": true,
+        "ever_approved": true,
+        "fix_attempts_used": 3,
+        "iteration_count": 0,
+        "critique_failed": false,
+        "gate_runs": 1,
+        "critique_runs": 1,
+        "entry_origin": "use-code",
+        "initial_splines_error": true,
+        "certification_status": "autoscaled_print",
+        "deep_verdict": "SCALE/REDESIGN",
+        "lost_frac_0p8": 0.1345,
+        "max_formable_d_mm": 0.5,
+        "scaled": 1.6,
+        "scaled_verdict": "PRINT",
+        "scaled_max_formable_d_mm": 0.8,
+        "stl_path_scaled_exists": true,
+        "fixture_bbox_mm": [
+          90.6,
+          90.6,
+          90.597
+        ],
+        "fixture_overhang": 0.1392,
+        "size_normalization": null,
+        "deep_stl": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-10-52/geom_fix_run_2.stl",
+        "stl_path": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-10-52/geom_fix_run_2.stl",
+        "verdicts": [
+          "approve=true match=good stability=stable comment=\"Realizes woven cubic lattice w"
+        ],
+        "phase1_before_phase2": null
+      },
+      {
+        "label": "E2E-3_run3",
+        "ran": true,
+        "manifest": true,
+        "run": "2026-09-26_12-16-16",
+        "exit_code": 0,
+        "wall_s": 492,
+        "peak_swap_delta_mb": 433,
+        "terminal_reason": "certified",
+        "approved": true,
+        "ever_approved": true,
+        "fix_attempts_used": 3,
+        "iteration_count": 1,
+        "critique_failed": false,
+        "gate_runs": 1,
+        "critique_runs": 2,
+        "entry_origin": "use-code",
+        "initial_splines_error": true,
+        "certification_status": "autoscaled_print",
+        "deep_verdict": "SCALE/REDESIGN",
+        "lost_frac_0p8": 0.1794,
+        "max_formable_d_mm": 0.5,
+        "scaled": 1.6,
+        "scaled_verdict": "PRINT",
+        "scaled_max_formable_d_mm": 0.8,
+        "stl_path_scaled_exists": true,
+        "fixture_bbox_mm": [
+          90.6,
+          90.6,
+          90.597
+        ],
+        "fixture_overhang": 0.1392,
+        "size_normalization": null,
+        "deep_stl": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-16-16/geom_design_iter_1.stl",
+        "stl_path": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-16-16/geom_design_iter_1.stl",
+        "verdicts": [
+          "approve=false match=partial stability=stable comment=\"Woven structure lacks expl",
+          "approve=true match=good stability=stable comment=\"Realizes woven cubic lattice w"
+        ],
+        "phase1_before_phase2": null
+      }
+    ],
+    "pass": true
+  },
+  "E2E-5": {
+    "run": {
+      "label": "E2E-5_target58",
+      "ran": true,
+      "manifest": true,
+      "run": "2026-09-26_12-24-48",
+      "exit_code": 0,
+      "wall_s": 317,
+      "peak_swap_delta_mb": 391,
+      "terminal_reason": "certified",
+      "approved": true,
+      "ever_approved": true,
+      "fix_attempts_used": 3,
+      "iteration_count": 0,
+      "critique_failed": false,
+      "gate_runs": 1,
+      "critique_runs": 1,
+      "entry_origin": "use-code",
+      "initial_splines_error": true,
+      "certification_status": "autoscaled_print",
+      "deep_verdict": "SCALE/REDESIGN",
+      "lost_frac_0p8": 1.0,
+      "max_formable_d_mm": 0.3,
+      "scaled": 2.7,
+      "scaled_verdict": "PRINT",
+      "scaled_max_formable_d_mm": 0.8,
+      "stl_path_scaled_exists": true,
+      "fixture_bbox_mm": [
+        90.6,
+        90.6,
+        90.597
+      ],
+      "fixture_overhang": 0.1392,
+      "size_normalization": {
+        "target_max_mm": 58.0,
+        "orig_max_mm": 90.6,
+        "new_max_mm": 58.0,
+        "scale": 0.6402,
+        "out": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-24-48/geom_fix_run_2_sized.stl"
+      },
+      "deep_stl": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-24-48/geom_fix_run_2_sized.stl",
+      "stl_path": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-24-48/geom_fix_run_2_sized.stl",
+      "verdicts": [
+        "approve=true match=good stability=stable comment=\"Candidate accurately depicts w"
+      ],
+      "phase1_before_phase2": null
+    },
+    "pass": true
+  },
+  "E2E-6": {
+    "lines": [
+      "gallery | 'a woven cubic lattice metamaterial' | rank 0 | cos 0.934 | woven | abcad/data/rag/renders/woven_cubic_lattice.png",
+      "gallery | 'a woven cubic lattice metamaterial' | rank 1 | cos 0.726 | helicoidal | abcad/data/rag/renders/bouligand_rotating_ply.png",
+      "gallery | 'a double-twist helical Bouligand structure' | rank 0 | cos 0.842 | helicoidal | abcad/data/rag/renders/bouligand_rotating_ply.png",
+      "gallery | 'a double-twist helical Bouligand structure' | rank 1 | cos 0.751 | woven | abcad/data/rag/renders/woven_cubic_lattice.png",
+      "text    | 'Write Blender Python code for a a woven cubic lattice metamaterial' | rank 0 | cos 0.808 | woven | 'a woven cubic lattice metamaterial of entangled helical fibers'",
+      "text    | 'Write Blender Python code for a a woven cubic lattice metamaterial' | rank 1 | cos 0.669 | helical | 'a double-twist helical Bouligand structure with two interleaved helico'",
+      "text    | 'Write Blender Python code for a a woven cubic lattice metamaterial' | rank 2 | cos 0.623 | helical | 'a graded-pitch helical Bouligand structure, small angle at the base in'",
+      "PASS: gallery top-1 for 'a woven cubic lattice metamaterial' is woven",
+      "PASS: gallery top-1 for 'a double-twist helical Bouligand structure' is helicoidal",
+      "PASS: text top-1 is the woven exemplar"
+    ],
+    "pass": true
+  },
+  "E2E-7": {
+    "run": {
+      "label": "E2E-7_offline",
+      "ran": true,
+      "manifest": true,
+      "run": "2026-09-26_12-30-26",
+      "exit_code": 0,
+      "wall_s": 291,
+      "peak_swap_delta_mb": 0,
+      "terminal_reason": "certified",
+      "approved": true,
+      "ever_approved": true,
+      "fix_attempts_used": 3,
+      "iteration_count": 0,
+      "critique_failed": false,
+      "gate_runs": 1,
+      "critique_runs": 1,
+      "entry_origin": "use-code",
+      "initial_splines_error": true,
+      "certification_status": "autoscaled_print",
+      "deep_verdict": "SCALE/REDESIGN",
+      "lost_frac_0p8": 0.1345,
+      "max_formable_d_mm": 0.5,
+      "scaled": 1.6,
+      "scaled_verdict": "PRINT",
+      "scaled_max_formable_d_mm": 0.8,
+      "stl_path_scaled_exists": true,
+      "fixture_bbox_mm": [
+        90.6,
+        90.6,
+        90.597
+      ],
+      "fixture_overhang": 0.1392,
+      "size_normalization": null,
+      "deep_stl": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-30-26/geom_fix_run_2.stl",
+      "stl_path": "out/e2e_2026-09-26/agent_runs/2026-09-26_12-30-26/geom_fix_run_2.stl",
+      "verdicts": [
+        "approve=true match=good stability=stable comment=\"Realizes woven cubic lattice w"
+      ],
+      "phase1_before_phase2": null
+    },
+    "socket_lines": 108,
+    "non_loopback": [],
+    "pass": true
+  },
+  "E2E-4": {
+    "runs": [
+      {
+        "label": "E2E-4_full_woven",
+        "ran": true,
+        "manifest": false,
+        "exit_code": 143
+      },
+      {
+        "label": "E2E-4_full_default",
+        "ran": true,
+        "manifest": false,
+        "exit_code": 143
+      }
+    ],
+    "pass": false
+  }
+}

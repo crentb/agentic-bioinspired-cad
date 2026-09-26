@@ -1,0 +1,16 @@
+{
+  "load_mode": "tension",
+  "E_solid_MPa": 3000.0,
+  "nu": 0.4,
+  "strain": 0.01,
+  "disp_mm": 0.32,
+  "A0_mm2": 841.0,
+  "H0_mm": 32.0,
+  "reaction_force_N": 401.0597392922625,
+  "nominal_stress_MPa": 0.4768843511204073,
+  "avg_sigma_zz_MPa": 1.5197893300619414,
+  "avg_von_mises_MPa": 3.7313684067884445,
+  "E_eff_MPa": 47.68843511204073,
+  "E_eff_fraction_of_solid": 0.01589614503734691,
+  "mesh": "out/damage_tolerance_v05/woven_fea_small/intact.msh"
+}

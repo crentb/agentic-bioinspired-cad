@@ -1,0 +1,266 @@
+# =============================================================================
+# Continuous Integration + DevSecOps for agentic-bioinspired-cad.
+#
+# Runs on every push / pull request to main, and is re-used verbatim (through
+# `workflow_call`) by release.yml and scheduled-scan.yml, so there is exactly
+# one definition of "green" in this repository.
+#
+# QUALITY, across Python 3.10-3.14:
+#   1. install the package (core runtime + dev tools). The heavy host-side
+#      stack (Blender, the conda cad_env / sfepy_env, MOOSE, Ollama, the LoRA
+#      weights) is intentionally NOT installed: tests that need it are marked
+#      `slow` and skipped, because GitHub-hosted runners do not have it.
+#   2. lint (ruff)   3. format check (black)   4. type check (mypy, advisory)
+#   5. the pytest suite with coverage
+#   6. citation metadata validation (CITATION.cff)
+#
+# PACKAGING:
+#   7. build the sdist + wheel and validate their metadata (twine), so a
+#      packaging regression is caught on the commit that introduces it rather
+#      than at release time, when a PyPI version number is already burned.
+#
+# SECURITY (shift-left: scans run in parallel with lint/test, and BOTH must be
+# green before the expensive container job spends its minutes):
+#   8. secret detection over the full git history (gitleaks)
+#   9. static application security testing of the package source (bandit)
+#  10. dependency audit of the resolved environment against known-CVE
+#      databases (pip-audit)
+#  11. container vulnerability scan of the built image (trivy, CRITICAL/HIGH)
+#  12. SBOM: a Software Bill of Materials for the image (syft, SPDX JSON)
+#  13. artifact signing: the SBOM is keylessly signed with cosign via GitHub's
+#      OIDC identity (Sigstore); signature bundle + SBOM ship as artifacts.
+#
+# Supply-chain hygiene applied to this file itself:
+#   - every third-party action is pinned to a full commit SHA (the release tag
+#     is kept in a trailing comment; Dependabot bumps both together);
+#   - least-privilege GITHUB_TOKEN (read-only by default, escalated per job);
+#   - checkout does not persist credentials into the workspace;
+#   - every job has a timeout so a hung step cannot burn minutes indefinitely.
+#
+# Gating philosophy (cheap checks first, one root cause = one red X):
+#   gitleaks / bandit / pip-audit cost seconds and GATE. trivy GATES on fixable
+#   CRITICAL/HIGH only. SBOM + signing are evidence artifacts, not gates.
+#   Escape hatches are deliberate and visible: an accepted pip-audit finding
+#   belongs in an --ignore-vuln flag HERE, in the diff, reviewed; an accepted
+#   image finding belongs in .trivyignore with its justification.
+# =============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Callable by release.yml / scheduled-scan.yml: a tagged commit (or a weekly
+  # re-scan) is re-proven by these EXACT gates, never by a drifting copy.
+  workflow_call:
+
+# Least-privilege default for every job: read the repository, nothing else.
+# Jobs that need more (the signing job needs an OIDC token) request it
+# explicitly at the job level, so privileges are visible where they are used.
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Quality gate: lint, format, types, tests, citation metadata.
+  # ---------------------------------------------------------------------------
+  lint-and-test:
+    name: Lint, format & test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false # report every Python version's result, not just the first failure
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package (core + dev extras; heavy host-side stack excluded)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Format check (black)
+        run: black --check .
+
+      - name: Type-check (mypy; advisory baseline, non-blocking)
+        # Runs and reports on every build; not yet gating while the codebase is
+        # incrementally annotated (tightened to gating module by module).
+        run: mypy -p abcad
+        continue-on-error: true
+
+      - name: Tests (pytest; host-stack 'slow' tests skipped) with coverage
+        run: pytest -m "not slow" --cov --cov-report=term-missing
+
+      - name: Validate CITATION.cff (once, not per Python version)
+        if: matrix.python-version == '3.12'
+        run: |
+          python -m pip install cffconvert
+          cffconvert --validate
+
+  # ---------------------------------------------------------------------------
+  # Packaging gate: the distributions build and their metadata renders.
+  # ---------------------------------------------------------------------------
+  package:
+    name: Build & validate sdist + wheel
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+
+      - name: Validate the built metadata (twine) — GATING
+        # A long description that would not render on PyPI, or malformed
+        # metadata, fails here on the offending commit instead of at release.
+        run: twine check --strict dist/*
+
+      - name: Install the built wheel into a clean venv and import it — GATING
+        # Proves the wheel is self-contained (package data, vendored module,
+        # imports) rather than only working from the source checkout.
+        run: |
+          python -m venv /tmp/wheel-venv
+          /tmp/wheel-venv/bin/python -m pip install dist/*.whl
+          cd /tmp && /tmp/wheel-venv/bin/python -c "import abcad, sys; print('abcad', abcad.__version__); sys.exit(0)"
+
+  # ---------------------------------------------------------------------------
+  # Security gate: secrets, SAST, known-vulnerable dependencies.
+  # ---------------------------------------------------------------------------
+  security:
+    name: Security scans (secrets, SAST, dependency audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # gitleaks scans the FULL history, not just the tip
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Secret detection (gitleaks, full history) — GATING
+        # A committed credential is a failure even if later deleted: history is
+        # forever once pushed. Pinned release binary; --redact keeps any hit out
+        # of the (eventually public) log.
+        run: |
+          GITLEAKS_VERSION=8.30.1
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks git --redact --no-banner -v .
+
+      - name: Install package + scanners
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e "."
+          python -m pip install bandit pip-audit
+
+      - name: SAST (bandit, medium+ severity) — GATING
+        # -ll: act on MEDIUM and HIGH findings only, so the gate targets real
+        # weaknesses (injection, unsafe deserialization, weak crypto) and not
+        # style-grade LOW notes. Scans the shipped package; its configuration
+        # (including the verbatim third-party directory it skips) is in
+        # pyproject.toml [tool.bandit].
+        run: bandit -c pyproject.toml -r abcad -ll
+
+      - name: Dependency audit (pip-audit vs known-CVE databases) — GATING
+        # Audits the RESOLVED environment (what actually installs, not just
+        # what pyproject names). A known-vulnerable dependency fails the run;
+        # a consciously accepted risk gets an explicit, reviewable
+        # --ignore-vuln GHSA-/CVE-id right here in the workflow diff.
+        run: pip-audit
+
+  # ---------------------------------------------------------------------------
+  # Container gate: build, scan, run the tests inside, SBOM, sign.
+  # ---------------------------------------------------------------------------
+  docker-build:
+    name: Container image builds, is scanned & runs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [lint-and-test, package, security] # spend container minutes only on commits that pass everything else
+    permissions:
+      contents: read
+      id-token: write # OIDC token for keyless (Sigstore) signing -- this job only
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build the core image
+        run: docker build -t agentic-bioinspired-cad:ci .
+
+      - name: Container vulnerability scan (trivy, CRITICAL/HIGH) — GATING
+        # Scans OS packages + Python site-packages inside the image just built.
+        # Fails if a known CRITICAL or HIGH CVE ships in the image, before it
+        # can ever be pushed anywhere.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: agentic-bioinspired-cad:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          # Gate on ACTIONABLE vulnerabilities only: a CVE with no fixed
+          # package released cannot be remediated here; it stays visible in the
+          # scan log and starts gating the moment a fix ships.
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      - name: Smoke-test (run the fast suite inside the container)
+        run: docker run --rm agentic-bioinspired-cad:ci pytest -m "not slow"
+
+      - name: SBOM (syft -> SPDX JSON) — evidence artifact
+        # A machine-readable record of exactly what the image contains; it can
+        # be diffed between releases or fed to a consumer's own scanners.
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: agentic-bioinspired-cad:ci
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false # uploaded together with its signature below
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+
+      - name: Sign the SBOM (cosign keyless via GitHub OIDC) — evidence artifact
+        # Keyless signing: no private key exists to store or leak. GitHub's OIDC
+        # identity for THIS workflow run signs through Sigstore; the certificate
+        # binds the signature to this repository + workflow, and the signature
+        # lands in the public Rekor transparency log. Verify with:
+        #   cosign verify-blob --bundle sbom.spdx.json.bundle \
+        #     --certificate-identity-regexp 'github.com/crentb/' \
+        #     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+        #     sbom.spdx.json
+        run: cosign sign-blob --yes --bundle sbom.spdx.json.bundle sbom.spdx.json
+
+      - name: Upload SBOM + signature bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom-and-signature
+          path: |
+            sbom.spdx.json
+            sbom.spdx.json.bundle

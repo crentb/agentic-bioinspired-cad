@@ -1,0 +1,480 @@
+% =====================================================================================
+% ABCAD-QMS-002 -- Quality Definitions & Test Methods
+% Controlled vocabulary, measurement definitions, test methods, and acceptance criteria
+% for the agentic-bioinspired-cad damage-tolerant printable-architecture program.
+%
+% Compile:  latexmk -pdf ABCAD-QMS-002_definitions_and_tests.tex   (from docs/qms/), then latexmk -c
+% This document is a controlled QMS record: update the revision table on ANY change.
+% Companion to ABCAD-SOP-001 (loop operation). SOP-001 says HOW to run;
+% this document says WHAT the words and numbers MEAN and WHEN a result is valid.
+% =====================================================================================
+\documentclass[11pt]{article}
+
+\usepackage[margin=2.4cm,headheight=28pt]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{listings}
+\usepackage{needspace}  % keep table headings with their tables
+\usepackage[hidelinks,pdftitle={ABCAD-QMS-002 Quality Definitions and Test Methods},pdfauthor={Cameron B. Renteria}]{hyperref}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  frame=single,
+  framerule=0.3pt,
+  xleftmargin=0.6em,
+  aboveskip=0.6em,
+  belowskip=0.6em,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textbf{ABCAD-QMS-002}\quad Rev.~B}
+\fancyhead[R]{\small agentic-bioinspired-cad Quality Management System}
+\fancyfoot[L]{\small Effective 2026-09-25}
+\fancyfoot[R]{\small Page \thepage\ of \pageref{LastPage}}
+
+\newcommand{\term}[1]{\textbf{#1}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+% Long file paths in \texttt cannot hyphenate; let TeX stretch inter-word space instead of
+% overrunning the margin.
+\sloppy
+\setlength{\emergencystretch}{3em}
+
+% ------------------------------------------------------------------------------------
+\begin{center}
+{\LARGE\bfseries ABCAD-QMS-002}\\[0.4em]
+{\Large Quality Definitions \& Test Methods}\\[0.3em]
+{\large agentic-bioinspired-cad: single-material, damage-tolerant, printable architectures}\\[1.0em]
+\begin{tabular}{ll}
+\toprule
+Document ID & ABCAD-QMS-002 \\
+Revision & B \\
+Effective date & 2026-09-25 \\
+Prepared by & Cameron B. Renteria \\
+Owner / approver & Cameron B. Renteria \\
+Companion documents & ABCAD-SOP-001 (loop operation) \\
+Evidence index & \texttt{results/README.md} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Purpose and scope}
+This document is the controlled vocabulary and measurement specification for agentic-bioinspired-cad.
+It defines (i) every quality-relevant term used by the pipeline's gates and instruments, (ii) the
+quantities measured and the equations behind them, (iii) the test methods (TM-1 \ldots TM-6) with their
+acceptance criteria and validity conditions, and (iv) the measured baseline recorded in
+\texttt{results/}.
+
+The program goal is \emph{damage-tolerant, 3D-printable architectures in a single material}, produced by a
+fully local agentic loop (LLM $\rightarrow$ Blender code-as-geometry $\rightarrow$ render $\rightarrow$
+VLM critique $\rightarrow$ repair $\rightarrow$ manufacturability gate $\rightarrow$ STL). All function
+must come from geometry and topology --- fiber entanglement, rotating weak planes, crack deflection ---
+never from a hard/soft material contrast. Where this document and SOP-001 overlap, SOP-001 governs
+\emph{operation}; this document governs \emph{meaning, validity, and acceptance}.
+
+\section{Normative references}
+\begin{itemize}[nosep]
+  \item ABCAD-SOP-001 Rev.~B --- \emph{End-to-End Operation of the Generative Design \& Print Loop}.
+  \item Instruments:
+    \begin{itemize}[nosep]
+      \item printability (TM-2): \texttt{abcad/printing/print\_audit.py};
+      \item flaw-seeded retention (TM-3): \texttt{abcad/fea/damage\_tolerance.py};
+      \item validated linear FEA chain: \texttt{abcad/fea/voxel\_plate\_mesh.py} and \texttt{abcad/fea/run\_tension.py};
+      \item validated finite-strain solver: \texttt{abcad/fea/run\_tension\_finite.py};
+      \item phase-field fracture and J-integral in MOOSE (TM-6): \texttt{abcad/fracture/}, with the decks in
+            \texttt{abcad/fracture/decks/}.
+    \end{itemize}
+  \item Science context (full references in \texttt{docs/LITERATURE.md}): woven metamaterials (Carton,
+        Surjadi, Aymon, Portela); the helicoidal-composite review of Ning et al.\ (2024); printed-Bouligand
+        pitch studies ($15$--$30^\circ$ per ply toughness band); imperfection-toughening studies of
+        architected lattices (arXiv:2504.08873, arXiv:2507.13806).
+\end{itemize}
+
+% ------------------------------------------------------------------------------------
+\section{Terms and definitions}
+
+\subsection{Geometry and mesh integrity}
+\begin{description}[style=nextline,itemsep=0.35em]
+  \item[STL] Triangulated boundary representation used for printing and voxelization.
+    Units are millimetres throughout.
+  \item[Welded vertex set] Vertices identified after rounding coordinates to $10^{-5}$~mm;
+    the basis for all topological checks (far below any feature size, far above float noise).
+  \item[Boundary (open) edge] An edge referenced by exactly one triangle. A tube with
+    open ends contributes one 12- or 24-gon boundary loop per end.
+  \item[Non-manifold edge] An edge referenced by more than two triangles. Bevel
+    \emph{miter folds} (Blender curve-bevel self-folding at path kinks) are the dominant source;
+    slicers union them, but they invalidate topological centerline recovery.
+  \item[Watertight] Zero boundary edges \emph{and} zero non-manifold edges
+    (pyvista feature-edge counts). Required for image-stencil voxelization to be trustworthy.
+  \item[Euler characteristic $\chi$] $\chi = V - E + F$ per connected component; a closed
+    manifold tube (torus) gives $\chi=0$, a capped cylinder $\chi=2$. Values far outside
+    $\{0,2\}$ diagnose fold/degenerate contamination (for example, legacy bevel-swept woven coils measure $\chi=24$).
+  \item[Edge-connected component] Maximal set of triangles connected through shared
+    \emph{edges}. Fused fibers that touch only at isolated points remain separate
+    edge-components; this is the correct fiber-separation test (vertex connectivity is not).
+\end{description}
+
+\subsection{Voxelization and FEA meshing}
+\begin{description}[style=nextline,itemsep=0.35em]
+  \item[Image-stencil voxelization] Rasterization of a closed STL into a boolean occupancy
+    grid (VTK polydata-to-stencil inside test). Voxel pitch is denoted $h$ [mm]; the baseline
+    protocol uses $h=1.0$ and the resolved protocol $h=0.5$.
+  \item[Keep-largest clean] Retention of the largest connected occupancy component before
+    meshing; disconnected fragments (failed welds, floaters) are discarded --- and their
+    disappearance is itself a validity signal (TM-3 validity).
+  \item[Loading plates / overlap] Two full-cross-section plates (thickness 2.0~mm) added at
+    the tension faces, intersecting the structure by the \emph{overlap} (0.8~mm) so plates
+    grip fibers before they end. Plates are immune to flaw seeding.
+  \item[Hex mesh band] Validated solver envelope: with the direct solver, $\lesssim$15--20\,k
+    hexahedra per solve on a 16~GB host. Near-solid parts that would exceed the band at $h=1.0$
+    are run at $h=1.25$ \emph{with the deviation disclosed in the record}; retention ratios remain
+    comparable because each part is normalized to its own intact solve. With the algebraic-multigrid
+    solver (\texttt{ABCAD\_FEA\_SOLVER=amg}, lineage-exact against the direct solver) meshes above
+    100\,k hexahedra are within the envelope.
+  \item[$A_0$, $H_0$] Nominal cross-section area and gauge length of the plated specimen,
+    recorded in the mesh sidecar and used to convert reactions to effective stress/strain.
+  \item[Voxel-weld rule] Two solids are guaranteed to weld in the grid only if they
+    interpenetrate by $\ge 0.4$~mm (giving a contact lens $\gtrsim 1.6$~mm wide at
+    $h=1.0$). Tangent (zero-thickness) contacts do \emph{not} reliably weld; coupons must
+    be designed to this rule.
+  \item[Resolution dependence] Absolute $E_\mathrm{eff}$ and floor margins depend on $h$ (the woven
+    specimen measures 82.7~MPa at $h=1.0$ and 47.7~MPa at $h=0.5$ with the same plating recipe).
+    Every ranking claim must cite its voxel size.
+\end{description}
+
+\subsection{Printability audit terms (\texttt{print\_audit.py})}
+\begin{description}[style=nextline,itemsep=0.35em]
+  \item[EDT] Euclidean distance transform of the occupancy grid; the basis of all
+    thickness/clearance measurements.
+  \item[Formability ladder, $\mathrm{lost}@d$] Morphological opening at diameter $d$:
+    the fraction of material that cannot be formed by a tool of diameter $d$. A part
+    ``forms at $d$'' if $\mathrm{lost}@d \le 1\%$. Ladder rungs: $d \in \{0.3, 0.5, 0.8, 1.2\}$~mm.
+  \item[max\_formable\_d] The \emph{largest} ladder rung the part passes --- the certified
+    minimum feature size.
+  \item[Clearance / fusion ladder] Twice the EDT of void space within 3~mm of solid;
+    gaps below $\approx$0.8~mm are flagged as expected local fiber fusion for FDM.
+  \item[Enclosed voids] Interior void components with no path to outside air --- a
+    trapped-resin defect class (resin process); informational for FDM.
+  \item[Overhang fraction] Bed-aware fraction of surface area steeper than $45^\circ$
+    (faces within 0.5~mm of $z_{\min}$ count as bed contact). $\le 15\%$ is treated as
+    support-free for FDM.
+  \item[Process profile] Printer-specific limits; the default FDM profile assumes a
+    0.4~mm nozzle (blocking thin-feature limit 0.8~mm) and 0.2~mm layers. Selected with
+    \texttt{ABCAD\_PRINT\_PROCESS}.
+  \item[Verdicts] \term{PRINT} (no blocking issues), \term{PRINT w/ fixes} (non-blocking
+    remediations listed), \term{SCALE/REDESIGN} (blocking violation with computed advice).
+  \item[Auto-scale factor $k$] Deterministic repair emitted by the deep gate on a
+    thin-feature failure: $k=\lceil (d_{\text{limit}} / d_{\text{certified}}) \rceil_{0.1}$,
+    sanity-capped ($k \le 4$, must fit the build volume). The scaled variant is re-audited
+    before being recorded as printable.
+  \item[Trust floor] Audit measurements are meaningful only $\ge 2$ voxels; on large parts
+    the auto-capped grid ($\le \sim 326^3$) sets which rungs are trustworthy.
+\end{description}
+
+\subsection{Damage tolerance (\texttt{damage\_tolerance.py})}
+\begin{description}[style=nextline,itemsep=0.35em]
+  \item[Effective modulus $E_{\mathrm{eff}}$] Linear small-strain uniaxial proxy from the
+    validated chain (voxelize $\rightarrow$ plate $\rightarrow$ hex mesh $\rightarrow$ SfePy solve):
+    \[ E_{\mathrm{eff}} \;=\; \frac{F/A_0}{\Delta L / H_0}, \qquad
+       \text{material model } E = 3000~\mathrm{MPa},\; \nu = 0.40,\; \varepsilon = 1\%. \]
+    $E_{\mathrm{eff}}$ is a structural (architecture $\times$ material) stiffness, scale-invariant
+    as a fraction of $E$.
+  \item[Flaw model] Per damaged replicate: $N=3$ spherical flaws of radius $r=1.5$~mm carved
+    into the \emph{member} region (plates immune; flaw centers kept clear of the grip bond),
+    followed by re-cleaning. Replicates $=3$, seeds pinned (base seed 20260703) for reproducibility.
+  \item[Flaw dose $f$] Fraction of member material removed by the flaws (reported per replicate).
+  \item[Retention $R$] $R = E_{\mathrm{eff}}^{\mathrm{damaged}} / E_{\mathrm{eff}}^{\mathrm{intact}}$
+    on identically meshed geometry.
+  \item[Proportional-loss floor] $R_{\mathrm{floor}} = 1 - f$: the retention of a hypothetical
+    structure in which every removed element carried exactly its volumetric share of load.
+  \item[Floor margin $m$] $m = \min_k R_k - (1-\bar f)$, with $\bar f$ the mean dose over the
+    replicates. \emph{The ranking quantity.} Interpretation rule: $m>0$ redundant / damage-tolerant;
+    $m \approx 0$ continuum-proportional; $m<0$ load-path-sensitive (flaws sever critical members).
+  \item[Damage-tolerance score] $\min_k R_k$ across replicates (worst sampled flaw placement),
+    always reported \emph{with} its dose and margin.
+  \item[Zero-point verification] A solid continuum control must measure $m \approx 0$.
+    Verified with the helicoidal plate loaded in-plane: $m = +0.0005$ at $h=1.25$ and
+    $m = -0.0002$ at $h=0.5$. This anchors the instrument: nonzero margins on architected parts are
+    signal, not meshing artifact.
+  \item[Linear-screen limitation (mandatory caveat)] $R$ is a \emph{stiffness} retention under
+    material removal. It cannot see crack-path mechanisms --- the crack twisting and deflection
+    behind the $15$--$30^\circ$ per ply Bouligand band and behind enamel decussation. Those are
+    resolved by TM-6.
+\end{description}
+
+\subsection{Fracture (\texttt{abcad/fracture/})}
+\begin{description}[style=nextline,itemsep=0.35em]
+  \item[Validation gate] The set of checks MOOSE must pass before any of its numbers enters a
+    record: elasticity and units, J-integral path independence, and the closed-form $K$ benchmark
+    (TM-6).
+  \item[Work to common displacement] $W = \int R\,\mathrm{d}u$ integrated to the smallest maximum
+    displacement of the runs being compared, after removing repeated rows from failed time steps.
+    Between specimens of different stiffness this ratio mixes stiffness with dissipation; it must be
+    reported together with the initial-stiffness ratio and the energy to peak load.
+  \item[Crack tortuosity] Crack path length divided by its projected span; 1 for a straight crack.
+  \item[Crack drift] Final vertical offset of the crack from the notch plane, as a fraction of the
+    specimen height (full model).
+\end{description}
+
+\subsection{Agentic-loop quality assurance}
+\begin{description}[style=nextline,itemsep=0.35em]
+  \item[Two-phase split] Phase 1 (code emitter) runs in a child process that exits before
+    Phase 2 (render / critic / repair) loads any model --- two large models never co-reside
+    (16~GB memory safety).
+  \item[Critic approval] The local critic (\texttt{qwen3-vl:8b}) returns a schema-constrained JSON
+    verdict with \texttt{match\_quality} $\in$ \{good, partial, poor\} and \texttt{physical\_stability};
+    \emph{approval} requires \texttt{match=good}. Operating rule: the Ollama daemon MUST run with
+    \texttt{OLLAMA\_CONTEXT\_LENGTH=8192} (prompt $\approx$3.5\,k tokens; the model's chat template
+    enables thinking) --- at the 4096 default the verdict truncates or vanishes.
+  \item[Repair attempt / stall guard] Code-fixer attempts are capped; a designer iteration that
+    reproduces a previous iteration is flagged as a stall and the run ends cleanly (no design
+    rounds on failed critiques).
+  \item[Deep gate] The full quantitative print audit, run once per critic-approved design on the
+    actually exported STL --- never inside the repair loop. Its verdict merges into the
+    manufacturability record; thin-feature failures trigger auto-scale.
+  \item[Convergence event] One uninterrupted run achieving:
+    repair $\rightarrow$ approval $\rightarrow$ deep gate $\rightarrow$ (auto-scale if needed)
+    $\rightarrow$ \term{PRINT}-certified artifact + complete manifest.
+  \item[Run manifest] \texttt{run\_manifest.json} written at the end of every run: prompt,
+    verdicts, artifact paths (including scaled variants), counters --- the record of the run.
+  \item[Terminal-state truthfulness] The recorded final state must reflect the last good
+    artifact and honest gate verdicts (\texttt{approved=false} runs end with their evidence, never
+    a fabricated success).
+  \item[Swap watchdog] Every heavy step runs under a monitor that samples swap usage and aborts
+    the step if swap exceeds the configured line (5120~MB for the loop on the 16~GB reference host)
+    rather than stalling the machine.
+\end{description}
+
+% ------------------------------------------------------------------------------------
+\section{Test methods}
+
+\subsection*{TM-1 --- Mesh integrity (watertight/manifold report)}
+\begin{itemize}[nosep]
+  \item \textbf{Purpose:} qualify an STL for voxelization, audit, and printing.
+  \item \textbf{Apparatus:} watertight report (pyvista feature edges), CAD environment.
+  \item \textbf{Procedure:} weld, count boundary and non-manifold edges, record bbox and triangle count.
+  \item \textbf{Acceptance:} watertight $=$ True for new parts. Open-tube swept lattices (woven, enamel)
+    are remeshed as solids (\texttt{abcad.printing.remesh\_watertight}) before certification; legacy
+    exceptions with documented open ends or miter folds are tolerated only where the record shows
+    slicer-union equivalence, and are barred from centerline-based processing.
+\end{itemize}
+
+\subsection*{TM-2 --- Printability audit (per process)}
+\begin{itemize}[nosep]
+  \item \textbf{Purpose:} certify a part against a printer process profile.
+  \item \textbf{Apparatus:} \texttt{abcad/printing/print\_audit.py}, process profile (default FDM 0.4~mm).
+  \item \textbf{Procedure:} voxelize (automatic pitch, trust floor noted), EDT ladders, overhang,
+    enclosed voids; emit verdict + CSV/MD report.
+  \item \textbf{Acceptance:} verdict \term{PRINT}; thin features $\mathrm{lost}@0.8 \le 1\%$;
+    overhang $\le 15\%$ for support-free claims; enclosed voids $=0$ for resin claims.
+\end{itemize}
+
+\subsection*{TM-3 --- Damage-tolerance screen (flaw-seeded stiffness retention)}
+\begin{itemize}[nosep]
+  \item \textbf{Purpose:} rank architectures by graceful stiffness retention under material loss.
+  \item \textbf{Apparatus:} \texttt{abcad/fea/damage\_tolerance.py} (composes only validated pieces);
+    SfePy solves via \texttt{run\_tension.py}.
+  \item \textbf{Procedure:} baseline protocol at $h=1.0$ (near-solid parts: $h=1.25$, disclosed);
+    resolved protocol at $h=0.5$ with the AMG solver (the ranking of record); plates 2.0 / overlap 0.8,
+    3 replicates $\times$ 3 flaws $r=1.5$~mm, pinned seeds; report $E_{\mathrm{eff}}$, $R_k$, $f_k$,
+    floor, margin, score; JSON + MD per part.
+  \item \textbf{Acceptance / validity conditions (ALL required):}
+    \begin{enumerate}[nosep]
+      \item $E_{\mathrm{eff}} \le 1.02\,E$ (material bound; a violation --- for example 84~GPa on a
+            degenerate remnant --- voids the run; enforced in code as TM3-V1),
+      \item keep-largest retains $\ge 70\%$ of the voxelized material (otherwise the part is
+            disconnected at that voxel size; enforced in code as TM3-V2),
+      \item intact hex count consistent with part volume ($\pm 30\%$ of $V/h^3$ + plates),
+      \item a valid flaw band exists (gauge $\gtrsim 8$~mm between grip clearances at $r=1.5$;
+            otherwise re-orient the part or reduce $r$, disclosed),
+      \item coupon designs obey the voxel-weld rule ($\ge 0.4$~mm interpenetration),
+      \item swap watchdog active; solves within the hex band of the chosen solver.
+    \end{enumerate}
+  \item \textbf{Records:} \texttt{damage\_tolerance.json}, \texttt{report.md}, and per-solve
+    \texttt{e\_eff.json} per part (archived under \texttt{results/damage\_tolerance/}).
+\end{itemize}
+
+\subsection*{TM-4 --- Loop convergence run}
+\begin{itemize}[nosep]
+  \item \textbf{Purpose:} end-to-end qualification of the agentic loop as a manufacturing front end.
+  \item \textbf{Apparatus:} the design loop per SOP-001; Ollama at 8192 context; swap watchdog.
+  \item \textbf{Procedure:} drive a known-failing emit (saved code with an execution error) through
+    the full loop uninterrupted.
+  \item \textbf{Acceptance:} convergence event as defined above, with a truthful manifest.
+    Non-approval outcomes are \emph{valid} runs if they end with an honest terminal state; they are
+    re-attempted, not patched.
+\end{itemize}
+
+\subsection*{TM-5 --- FEA coupon design rules (for TM-3 inputs)}
+\begin{itemize}[nosep]
+  \item Features intended to carry architecture signal must be $\ge$ 2 voxels; sub-voxel
+    features (e.g.\ 0.2~mm laminate plies at $h \ge 1.0$) vanish --- such parts measure as
+    solid controls and MUST be labeled as such in reports.
+  \item Crossing members: $\ge 0.4$~mm interpenetration (voxel-weld rule).
+  \item Target intact mesh inside the hex band; verify with a dry voxel count before solving.
+  \item Verify intended geometry parameters independently of the generator where cheap
+    (e.g.\ per-ply PCA angle check on exported pitch coupons).
+\end{itemize}
+
+\subsection*{TM-6 --- Phase-field fracture and J-integral (MOOSE)}
+\begin{itemize}[nosep]
+  \item \textbf{Purpose:} measure the crack-path mechanisms that TM-3 cannot see --- crack deflection
+    by rod orientation, crack twisting through rotating plies, and the crack driving force.
+  \item \textbf{Apparatus:} MOOSE \texttt{combined} application (\texttt{solid\_mechanics},
+    \texttt{phase\_field}, \texttt{contact}); decks in \texttt{abcad/fracture/decks/}; deck generators and
+    analysis scripts in \texttt{abcad/fracture/}.
+  \item \textbf{Validation gate (must pass before any record):} (1) solid bar in uniaxial tension in
+    project units returns $E_\mathrm{eff} = E$ ($3000.00$~MPa, 0.000\% error); (2) J-integral rings
+    agree to $<0.1\%$; (3) single-edge-notch tension, isotropic, $a/W = 0.2$: J within $\pm 5\%$ of
+    $K_I^2/E'$ with $K_I = F(a/W)\,\sigma\sqrt{\pi a}$ (achieved: $3.077\times10^{-3}$ vs
+    $3.223\times10^{-3}$, $-4.5\%$). A crack on a symmetry plane requires
+    \texttt{symmetry\_plane} in \texttt{DomainIntegral}, otherwise J is exactly $2\times$ low.
+  \item \textbf{Procedure:} orientation sweep of a notched specimen (half model); J at initiation
+    versus orientation; full-model deflection with a seeded internal crack and variational-inequality
+    irreversibility; ply-strip Bouligand decks at the coupon pitches; 3D blocks with rotating ply
+    slabs; frictional-contact woven cells and weak-interface fracture decks.
+  \item \textbf{Acceptance / validity conditions:} validation gate passed on the same build; relative
+    results in model units unless the material is calibrated; load or work ratios between specimens of
+    different stiffness reported with the stiffness ratio and the energy to peak load; each run's solver
+    convergence recorded; results archived under \texttt{results/fracture/} and
+    \texttt{results/woven\_cell/}.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------
+\section{Measured baseline}
+
+\subsection{Damage-tolerance ranking (TM-3)}
+All values from pinned-seed runs (\texttt{results/damage\_tolerance/}); margins computed from the
+unrounded records. Doses differ by part and are shown.
+
+\needspace{15\baselineskip}
+\noindent\textbf{Resolved protocol, $h = 0.5$~mm, AMG solver (ranking of record).}
+\begin{center}\small
+\begin{tabular}{lrrrrr}
+\toprule
+Part (load direction) & $E_{\mathrm{eff}}$ [MPa] & score $\min R$ & dose $\bar f$ & floor $1{-}\bar f$ & margin $m$ \\
+\midrule
+Helicoidal plate, in-plane (solid control) & 554.0 & 0.997 & 0.0030 & 0.9970 & $-0.0002$ \\
+Bouligand coupon $\Delta\theta=10^\circ$ & 446.3 & 0.991 & 0.0036 & 0.9964 & $-0.0055$ \\
+Bouligand coupon $\Delta\theta=20^\circ$ & 474.4 & 0.990 & 0.0032 & 0.9968 & $-0.0070$ \\
+Bouligand coupon $\Delta\theta=30^\circ$ & 520.3 & 0.989 & 0.0031 & 0.9969 & $-0.0075$ \\
+Double-twist laminate, in-plane & 492.8 & 0.989 & 0.0025 & 0.9975 & $-0.0088$ \\
+Enamel lattice $\times 4$, sigmoid twist & 1120.5 & 0.985 & 0.0051 & 0.9949 & $-0.0098$ \\
+Enamel lattice $\times 4$, linear twist & 1096.0 & 0.984 & 0.0047 & 0.9953 & $-0.0109$ \\
+Bouligand coupon $\Delta\theta=15^\circ$ & 447.8 & 0.986 & 0.0035 & 0.9965 & $-0.0110$ \\
+Enamel lattice $\times 4$, accelerating twist & 1115.9 & 0.984 & 0.0049 & 0.9951 & $-0.0111$ \\
+Woven cube, fused crossings & 47.7 & 0.947 & 0.0070 & 0.9930 & $-0.0462$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\needspace{15\baselineskip}
+\noindent\textbf{Baseline protocol, $h = 1.0$~mm ($1.25$~mm for the near-solid plates).}
+\begin{center}\small
+\begin{tabular}{lrrrrr}
+\toprule
+Part (load direction) & $E_{\mathrm{eff}}$ [MPa] & score $\min R$ & dose $\bar f$ & floor $1{-}\bar f$ & margin $m$ \\
+\midrule
+Helicoidal plate, in-plane (solid control) & 941.2 & 0.998 & 0.0030 & 0.9970 & $+0.0005$ \\
+Double-twist laminate, in-plane & 896.9 & 0.994 & 0.0026 & 0.9974 & $-0.0030$ \\
+Double-twist laminate, through-thickness & 732.0 & 0.988 & 0.0069 & 0.9931 & $-0.0050$ \\
+Bouligand coupon $\Delta\theta=10^\circ$ & 845.2 & 0.984 & 0.0073 & 0.9927 & $-0.0086$ \\
+Bouligand coupon $\Delta\theta=15^\circ$ & 812.9 & 0.979 & 0.0069 & 0.9931 & $-0.0141$ \\
+Bouligand coupon $\Delta\theta=20^\circ$ & 819.7 & 0.975 & 0.0074 & 0.9926 & $-0.0173$ \\
+Bouligand coupon $\Delta\theta=30^\circ$ & 842.0 & 0.972 & 0.0072 & 0.9928 & $-0.0211$ \\
+Woven cube, fused crossings & 82.7 & 0.881 & 0.0116 & 0.9884 & $-0.1076$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent\textbf{Findings of record.}
+(1)~The instrument zero point is verified (the solid control sits at its floor at both resolutions).
+(2)~The coarse proxy exaggerates the spread: margins span $+0.0005$ to $-0.108$ at $h=1.0$ but only
+$-0.0002$ to $-0.011$ at $h=0.5$ for everything except the woven cube.
+(3)~The \emph{fused} woven cube is the only genuine outlier ($m = -0.046$ at $h=0.5$): voxel-welded
+crossings convert entanglement into brittle continuous load paths.
+(4)~Enamel ranks with the solid controls and the Bouligand coupons, and the twist law and the Bouligand
+pitch make no meaningful TM-3 difference --- their mechanisms act on the crack path (TM-6).
+(5)~The laminate plates' 0.2~mm plies are sub-voxel at $h \ge 1.0$; they measure as solid-class
+controls there (TM-5 labeling rule applies).
+
+\subsection{Fracture (TM-6)}
+Validation gate passed (Section~4, TM-6). Recorded mechanisms: rod orientation steers a free crack
+(drift $+0.005$ at $0^\circ$ and $90^\circ$, $-0.47$ at $30^\circ$, $+0.48$ at $60^\circ$); crack
+tortuosity through the ply architecture of the Bouligand coupons is 1.46 / 1.82 / 1.60 / 1.66 at
+$\Delta\theta$ = 10 / 15 / 20 / 30$^\circ$ per ply, peaking inside the $15$--$30^\circ$ band; J at crack
+initiation rises by 7\% at $45^\circ$ relative to $0^\circ$. In the orientation sweep the peak-load
+(1.32$\times$) and work-to-common-displacement (1.67$\times$) ratios at $45^\circ$ track the
+1.81$\times$ higher initial stiffness of the rotated anisotropic material, while the energy to peak load
+is unchanged (0.98$\times$); the energy consequence of crack deflection therefore remains to be
+measured. Non-fused woven cells with frictional crossings retain exactly the geometric fraction
+$(N-1)/N$ of their stiffness when one of $N$ warp fibers is cut (0.500 for $2\times2$, 0.667 for
+$3\times3$); weak interfaces ($G_c/10$) lower the peak load of a notched specimen to 0.32$\times$ that of
+the uniform control.
+
+\subsection{Print certification status (TM-2, default FDM 0.4)}
+\begin{center}
+\begin{tabularx}{\textwidth}{lL}
+\toprule
+Artifact & Status \\
+\midrule
+\texttt{woven\_fea\_small\_x20\_smooth.stl} &
+\textbf{PRINT, no blocking issues} --- the release candidate. 555{,}622 triangles, watertight,
+0 non-manifold, $\mathrm{lost}@0.8 = 0.17\%$, max\_formable 1.2~mm, enclosed voids 0, overhang 13.4\%.
+Produced by voxel remeshing (0.25~mm) and windowed-sinc smoothing of the certified $\times 2.0$ variant. \\
+\texttt{woven\_fea\_small\_x20.stl} & PRINT (clean), superseded for release by the remeshed file;
+retained as lineage. \\
+\texttt{woven\_fea\_small\_x15.stl} & PRINT (marginal, 0.99\% $<$ 0.8~mm). \\
+Loop artifact (auto-scaled $\times 1.6$) & PRINT; the first artifact certified end to end by the loop. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Loop qualification status (TM-4)}
+Convergence event witnessed (uninterrupted; swap peak 2236~MB): repair (2 attempts) $\rightarrow$
+approval (match=good, stability=stable) $\rightarrow$ deep-gate honest thin-feature fail (14\% $<$
+0.8~mm, correct $\times 1.6$ advice) $\rightarrow$ auto-scale $\rightarrow$ re-audit \term{PRINT}
+$\rightarrow$ complete manifest (archived in \texttt{results/agent\_runs/}). Critique reliability at
+8192 context: zero dropouts across two consecutive full runs (six verdicts). Code-fixer record: eight
+consecutive runs at $\le 3$ attempts.
+
+\section{Records, traceability, change control}
+\begin{itemize}[nosep]
+  \item Every TM-2, TM-3, and TM-6 run stores JSON/CSV/MD evidence; every loop run stores a manifest
+    in its run folder; heavy-step logs are kept with the run.
+  \item Records that back published numbers are archived under \texttt{results/} and checked by the
+    gold tests (\texttt{tests/test\_golds.py}).
+  \item Seeds, voxel pitches, and any protocol deviation (e.g.\ $h=1.25$ on near-solid parts, part
+    re-orientation) MUST appear in the stored record.
+  \item Changes to gates, instruments, or this vocabulary are recorded (what / why / files /
+    verification) and bump this document's revision.
+\end{itemize}
+
+\section*{Revision history}
+\begin{center}
+\begin{tabular}{llp{0.62\textwidth}}
+\toprule
+Rev & Date & Change \\
+\midrule
+A & 2026-07-05 & Initial release: vocabulary, TM-1 to TM-6, measured baseline. \\
+B & 2026-09-25 & Public release: identifiers renamed to the \texttt{abcad} namespace; TM-6 defined as
+the MOOSE phase-field fracture and J-integral method with its validation gate; 0.5~mm resolved TM-3
+ranking of record added with resolution-dependence rule; fracture baseline added. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

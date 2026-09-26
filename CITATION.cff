@@ -1,0 +1,40 @@
+# Citation metadata for agentic-bioinspired-cad (Citation File Format 1.2.0).
+# Lets GitHub render a "Cite this repository" button and gives users a precise,
+# machine-readable citation. Update `version` / `date-released` on each tagged
+# release (the release workflow refuses a tag whose version disagrees).
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "agentic-bioinspired-cad"
+abstract: >-
+  A fully local agentic LLM-to-CAD-to-FEA-to-print loop for single-material,
+  damage-tolerant, 3D-printable bioinspired architectures. Parametric generators
+  for helicoidal (Bouligand), woven-lattice and enamel-decussation families are
+  coupled to a closed design loop (code-emitting language model, headless Blender
+  build and render, schema-constrained vision critic, repair agents and a
+  manufacturability gate) and to verification instruments: a printability audit,
+  voxel-hex linear and finite-strain finite-element analysis, a flaw-seeded
+  damage-tolerance retention metric, and MOOSE phase-field fracture simulations
+  of crack twisting and deflection.
+type: software
+authors:
+  - family-names: "Renteria"
+    given-names: "Cameron B."
+    email: "crentb@uw.edu"
+    affiliation: "University of Washington"
+version: "0.1.0"
+date-released: "2026-09-25"
+license: "Apache-2.0"
+repository-code: "https://github.com/crentb/agentic-bioinspired-cad"
+keywords:
+  - "bioinspired design"
+  - "architected materials"
+  - "damage tolerance"
+  - "Bouligand"
+  - "woven lattice"
+  - "tooth enamel"
+  - "generative CAD"
+  - "large language models"
+  - "agentic workflow"
+  - "finite element analysis"
+  - "phase-field fracture"
+  - "additive manufacturing"
