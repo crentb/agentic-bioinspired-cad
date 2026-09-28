@@ -236,7 +236,7 @@ jobs:
       - name: SBOM (syft -> SPDX JSON) — evidence artifact
         # A machine-readable record of exactly what the image contains; it can
         # be diffed between releases or fed to a consumer's own scanners.
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           image: agentic-bioinspired-cad:ci
           format: spdx-json
@@ -244,7 +244,7 @@ jobs:
           upload-artifact: false # uploaded together with its signature below
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
       - name: Sign the SBOM (cosign keyless via GitHub OIDC) — evidence artifact
         # Keyless signing: no private key exists to store or leak. GitHub's OIDC
