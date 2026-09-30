@@ -939,9 +939,9 @@ millimetres for `*_MM`, pixels for `*_PX`.
 | Variable | Default | Meaning |
 |---|---|---|
 | `ABCAD_BASE_MODEL` | `meta-llama/Llama-3.2-3B-Instruct` | Base model (Hugging Face id) |
-| `ABCAD_BASE_REVISION` | `main` | Base-model revision; pin a commit hash to freeze the weights |
+| `ABCAD_BASE_REVISION` | `0cb88a4f764b7a12671c53f0838cd831a0843b95` | Base-model revision: the commit the validation runs used; `main` follows every new upload |
 | `ABCAD_LORA_ADAPTER` | `rachelkluu/Bioinspired3D` | LoRA adapter (Hugging Face id); exact casing, because the local cache keys on the string |
-| `ABCAD_LORA_REVISION` | `main` | Adapter revision |
+| `ABCAD_LORA_REVISION` | `47539274e56c7b38d052bfe6334a2868029a26b8` | Adapter revision: the commit the validation runs used |
 | `ABCAD_EMIT_DEVICE` | `auto` | `auto` resolves to `mps`, else `cuda:0`, else `cpu`; any other value is passed to torch as is |
 | `ABCAD_EMIT_DTYPE` | `float16` | `float16` or `bfloat16` (`fp16` and `bf16` accepted); other values fall back to `float16` with a warning |
 | `ABCAD_EMIT_MODE` | `design` | Prompt framing: `design` or `direct` (§1.1) |
@@ -957,7 +957,7 @@ millimetres for `*_MM`, pixels for `*_PX`.
 |---|---|---|
 | `ABCAD_RAG` | `1` | Code-exemplar retrieval for the emitter, repair and refine |
 | `ABCAD_EMBED_MODEL` | `BAAI/bge-small-en-v1.5` | sentence-transformers embedder (Hugging Face id) |
-| `ABCAD_EMBED_REVISION` | `main` | Embedder revision |
+| `ABCAD_EMBED_REVISION` | `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a` | Embedder revision: the commit the validation runs used |
 | `ABCAD_EMBED_DEVICE` | `cpu` | Embedder device; the CPU keeps the Metal allocator out of the Phase-2 parent |
 | `ABCAD_TEXT_CORPUS` | the shipped `text_corpus.jsonl` | Primary code-exemplar corpus |
 | `ABCAD_TEXT_CORPORA_EXTRA` | none | Further code-exemplar corpora, appended |
@@ -1065,9 +1065,9 @@ long runs, for example with `caffeinate -i` on macOS.
 Face: accept its license, then log in once), the adapter and the embedder, and `ollama pull` for
 the two Ollama models. Afterwards, set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` so that the
 emitter and the embedder load only from the local cache; the Phase-1 child inherits the parent's
-environment, so setting them once covers both phases. Pin `ABCAD_BASE_REVISION`,
-`ABCAD_LORA_REVISION` and `ABCAD_EMBED_REVISION` to commit hashes for reproducible weights, since
-`main` follows every new upload.
+environment, so setting them once covers both phases. `ABCAD_BASE_REVISION`,
+`ABCAD_LORA_REVISION` and `ABCAD_EMBED_REVISION` default to the commits the validation runs used,
+so the weights are reproducible; setting one of them to `main` follows every new upload instead.
 
 **Loopback only.** The only network connection the loop itself opens is to the chat endpoint,
 which must be a loopback address (§9); a remote endpoint needs the explicit

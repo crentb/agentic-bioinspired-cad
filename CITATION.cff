@@ -19,10 +19,10 @@ type: software
 authors:
   - family-names: "Renteria"
     given-names: "Cameron B."
-    email: "crentb@uw.edu"
+    email: "crentb23@gmail.com"
     affiliation: "University of Washington"
 version: "0.1.0"
-date-released: "2026-09-25"
+date-released: "2026-09-30"
 license: "Apache-2.0"
 repository-code: "https://github.com/crentb/agentic-bioinspired-cad"
 keywords:
@@ -38,3 +38,28 @@ keywords:
   - "finite element analysis"
   - "phase-field fracture"
   - "additive manufacturing"
+# Work this software builds on: the code emitter is the Bioinspired3D LoRA adapter, and the
+# emit, render, critique and repair loop follows the Bioinspired123D system it was released with.
+references:
+  - type: article
+    title: "Bioinspired123D: generative 3D modeling system for bioinspired structures"
+    authors:
+      - family-names: "Luu"
+        given-names: "Rachel K."
+      - family-names: "Buehler"
+        given-names: "Markus J."
+    journal: "AI for Science"
+    volume: 2
+    issue: 2
+    start: "025004"
+    year: 2026
+    doi: "10.1088/3050-287X/ae61d1"
+  - type: software
+    title: "Bioinspired123D"
+    authors:
+      - family-names: "Luu"
+        given-names: "Rachel K."
+      - family-names: "Buehler"
+        given-names: "Markus J."
+    repository-code: "https://github.com/lamm-mit/Bioinspired123D"
+    license: "Apache-2.0"

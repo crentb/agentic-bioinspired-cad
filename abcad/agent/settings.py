@@ -65,6 +65,13 @@ DEFAULT_BASE_MODEL = "meta-llama/Llama-3.2-3B-Instruct"
 DEFAULT_LORA_ADAPTER = "rachelkluu/Bioinspired3D"
 DEFAULT_EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 
+# Default Hugging Face revisions: the exact commits every recorded validation run used
+# (results/agent_runs/*/run_manifest.json). Pinning them means a later upload to any of the three
+# repositories can never change the weights a default run loads; ABCAD_*_REVISION overrides them.
+DEFAULT_BASE_REVISION = "0cb88a4f764b7a12671c53f0838cd831a0843b95"
+DEFAULT_LORA_REVISION = "47539274e56c7b38d052bfe6334a2868029a26b8"
+DEFAULT_EMBED_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+
 # Fields that must never be written to a manifest or a log (the bearer token for the endpoint).
 _SECRET_FIELDS = frozenset({"llm_api_key"})
 
@@ -155,9 +162,9 @@ class AgentSettings:
 
     # ---- C. Phase-1 code emitter (fine-tuned LoRA on a local base model) --------------------------
     base_model: str = DEFAULT_BASE_MODEL
-    base_revision: str = "main"  # pin a commit hash to freeze the weights
+    base_revision: str = DEFAULT_BASE_REVISION  # pinned commit; "main" follows every new upload
     lora_adapter: str = DEFAULT_LORA_ADAPTER  # exact casing: the cache keys on the string
-    lora_revision: str = "main"
+    lora_revision: str = DEFAULT_LORA_REVISION
     emit_device: str = "auto"  # auto -> mps, else cuda:0, else cpu (resolved inside the child)
     emit_dtype: str = "float16"  # float16 | bfloat16 (aliases fp16 / bf16 accepted)
     emit_mode: str = "design"  # prompt framing: "design" or "direct"
@@ -170,7 +177,7 @@ class AgentSettings:
     # ---- D. retrieval ----------------------------------------------------------------------------
     rag_enabled: bool = True  # code-exemplar retrieval for the emitter, repair and refine
     embed_model: str = DEFAULT_EMBED_MODEL
-    embed_revision: str = "main"
+    embed_revision: str = DEFAULT_EMBED_REVISION
     embed_device: str = "cpu"  # CPU keeps the Metal allocator out of the Phase-2 parent
     text_corpora: tuple[str, ...] = field(default_factory=_default_text_corpora)
     vlm_corpora: tuple[str, ...] = field(default_factory=_default_vlm_corpora)

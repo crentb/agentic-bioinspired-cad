@@ -20,7 +20,7 @@ The agentic design loop runs Python that language models write (the code emitter
 
 - Run the loop under a dedicated, unprivileged account, or in a virtual machine or container with no access to credentials, SSH keys, or personal data.
 - Keep the model endpoints local. The defaults point at an Ollama server on `localhost`; pointing the loop at a model server you do not control hands that server the ability to choose the code that runs on your machine.
-- Pin model revisions. The code-emitter adapter can be pinned to an immutable Hugging Face revision so a changed upstream artifact is never pulled silently.
+- Keep model revisions pinned. The base model, the code-emitter adapter and the embedder default to immutable Hugging Face commits, so a changed upstream artifact is never pulled silently; overriding a revision with `main` gives that up.
 - Review generated geometry code before reusing it outside the loop.
 
 The generators, FEA and fracture tools do not execute model output; they run the repository's own code on user-supplied parameters and meshes.

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-only
+# Adapted from a MOOSE framework test input (https://github.com/idaholab/moose), so this deck stays
+# under LGPL-2.1: full text in LICENSE-LGPL-2.1.txt beside it; see NOTICE.
 # =====================================================================================
 # TM-6 VIDEO variant (Exodus field output + viscous-stable propagation)
 # TM-6 — FRACTURE RESPONSE vs ROD ORIENTATION (phase-field fracture).

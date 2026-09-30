@@ -1,0 +1,20 @@
+# Extra files for the source distribution (sdist). The wheel is unaffected: its contents come
+# from [tool.setuptools.package-data] in pyproject.toml.
+#
+# Why: without this file the sdist carried 11 of the 25 test files (no conftest.py, no
+# tests/agent/, no fixtures) and none of the evidence records the gold tests read, so the test
+# suite could not run from an unpacked sdist. These lines ship the complete fast suite plus the
+# files it reads, so `pytest -m "not slow"` passes from the sdist exactly as it does from a clone.
+
+# The complete test suite, including the agent-loop tests and their recorded fixtures.
+graft tests
+
+# Text evidence records that the gold tests re-verify.
+graft results
+
+# Documents and lockfiles the tests read.
+include docs/FRACTURE.md
+graft env
+
+# Never ship interpreter caches.
+global-exclude *.py[cod] __pycache__

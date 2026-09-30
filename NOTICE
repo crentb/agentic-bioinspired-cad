@@ -22,12 +22,25 @@ under the MIT License (full text in abcad/_vendor/woven_lattice/LICENSE).
 
 The MOOSE input decks abcad/fracture/decks/tm6_twist.i, tm6_video.i and
 tm6_stageD.i are adapted from phase-field-fracture test inputs of the MOOSE
-framework (https://github.com/idaholab/moose, LGPL-2.1); each deck names its
-source input in its header.
+framework (https://github.com/idaholab/moose). Those three files remain under
+the GNU Lesser General Public License v2.1 (LGPL-2.1-only; full text in
+abcad/fracture/decks/LICENSE-LGPL-2.1.txt), not under the Apache License; each
+deck names its source input in its header.
 
-Model weights used at run time (a Llama-3.2-3B-Instruct base model, a LoRA
-adapter, a sentence-embedding model, and local Ollama models) are NOT
-distributed with this software; they are downloaded by the user and remain
-subject to their own licenses.
+--------------------------------------------------------------------------------
+Related work
+--------------------------------------------------------------------------------
+The design loop's code emitter is the Bioinspired3D LoRA adapter
+(rachelkluu/Bioinspired3D on Hugging Face), and the loop's emit, render,
+critique and repair design follows the Bioinspired123D system it was released
+with: R. K. Luu and M. J. Buehler, "Bioinspired123D: generative 3D modeling
+system for bioinspired structures", AI for Science 2, 025004 (2026),
+doi:10.1088/3050-287X/ae61d1; code at https://github.com/lamm-mit/Bioinspired123D
+(Apache-2.0). No code from that repository is included here.
+
+Model weights used at run time (the Llama-3.2-3B-Instruct base model, the
+Bioinspired3D LoRA adapter, a sentence-embedding model, and local Ollama
+models) are NOT distributed with this software; they are downloaded by the
+user and remain subject to their own licenses.
 
 This NOTICE file is provided for attribution and does not modify the License.

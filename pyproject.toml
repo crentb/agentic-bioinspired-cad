@@ -23,12 +23,20 @@ version         = "0.1.0"
 description     = "Local agentic LLM-to-CAD-to-FEA-to-print loop for single-material, damage-tolerant bioinspired architectures."
 readme          = "README.md"
 requires-python = ">=3.10"
-# SPDX expression (PEP 639). The license files below are copied into every
-# sdist and wheel; the vendored woven-lattice LICENSE (MIT) must ship with the
-# code it covers, which is what keeps redistribution compliant.
-license         = "Apache-2.0"
-license-files   = ["LICENSE", "NOTICE", "abcad/_vendor/woven_lattice/LICENSE"]
-authors         = [{ name = "Cameron B. Renteria", email = "crentb@uw.edu" }]
+# SPDX expression (PEP 639). The project is Apache-2.0; the distribution also
+# carries the vendored woven-lattice engine (MIT) and three fracture decks
+# adapted from MOOSE test inputs (LGPL-2.1), so all three licenses are declared.
+# The license files below are copied into every sdist and wheel; each
+# third-party license must ship with the files it covers, which is what keeps
+# redistribution compliant (see NOTICE).
+license         = "Apache-2.0 AND MIT AND LGPL-2.1-only"
+license-files   = [
+    "LICENSE",
+    "NOTICE",
+    "abcad/_vendor/woven_lattice/LICENSE",
+    "abcad/fracture/decks/LICENSE-LGPL-2.1.txt",
+]
+authors         = [{ name = "Cameron B. Renteria", email = "crentb23@gmail.com" }]
 keywords = [
     "bioinspired design", "architected materials", "damage tolerance", "Bouligand",
     "woven lattice", "tooth enamel", "generative CAD", "large language models",
@@ -130,6 +138,7 @@ abcad = [
     "data/rag/renders/*.png",
     "data/exemplars/*",
     "fracture/decks/*.i",
+    "fracture/decks/LICENSE-LGPL-2.1.txt",  # travels with the three MOOSE-derived decks
     "_vendor/woven_lattice/LICENSE",
     "_vendor/woven_lattice/README.md",
 ]
