@@ -97,9 +97,9 @@ agent = [
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.1",
-    "ruff==0.16.8",
+    "ruff==0.16.10",
     "black==26.5.1",
-    "mypy==2.3.1",
+    "mypy==2.4.0",
     "pre-commit>=3.7",
     "Pillow>=10.0",   # lets the fast suite exercise the critic's image downscaling (lazy import)
 ]
