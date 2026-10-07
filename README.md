@@ -203,3 +203,10 @@ The design loop builds on Bioinspired123D by Rachel K. Luu and Markus J. Buehler
 ## License
 
 Apache-2.0, except the vendored woven-lattice engine (MIT) and the three MOOSE-derived fracture decks (LGPL-2.1). See [LICENSE](https://github.com/crentb/agentic-bioinspired-cad/blob/main/LICENSE) and [NOTICE](https://github.com/crentb/agentic-bioinspired-cad/blob/main/NOTICE).
+
+## Bioinspired123D
+
+**Generative 3D Modeling System for Bioinspired Structures**
+
+**Authors:** Rachel K. Luu, Markus J. Buehler (2026)\
+**Corresponding author:** mbuehler@mit.edu
