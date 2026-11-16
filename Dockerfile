@@ -12,7 +12,7 @@
 # (CadQuery, SfePy), MOOSE, Ollama and the model weights. They are host-side
 # engines driven by subprocess from the package; see README "Installation".
 # =============================================================================
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 # OCI metadata. `source` links the published GHCR package to this repository.
 LABEL org.opencontainers.image.title="agentic-bioinspired-cad" \
